@@ -1,0 +1,4 @@
+chair_other7
+crib_1
+desk_1
+shelf_1

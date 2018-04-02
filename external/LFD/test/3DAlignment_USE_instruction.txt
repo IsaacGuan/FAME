@@ -1,0 +1,9 @@
+files required:
+list.txt (specifies the models, e.g., Models/chair, "Models" is the folder, and chair is the mesh file)
+
+align10.txt
+q8_table
+
+12_0
+..
+12_9.OBJ
