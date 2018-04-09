@@ -24,7 +24,7 @@ namespace FameBase
 
         /*********Var**********/
         // test paths
-        public static string MODLES_PATH = @"E:\Projects\fame\data_sets\shapes\set_2";
+        public static string MODLES_PATH = @"E:\Projects\fame\data_sets\shapes\set_2\";
         public static string PATCH_PATH = @"E:\Projects\fame\data_sets\patch_data\";
         public static string MATLAB_PATH = @"E:\Projects\fame\externalCLR\code_for_prediction_only\";
         public static string MATLAB_INPUT_PATH = @"E:\Projects\fame\externalCLR\code_for_prediction_only\test\input\";
@@ -1199,6 +1199,11 @@ namespace FameBase
             double val = e.OldValue - e.NewValue; // up to down
             double scale = val / e.OldValue * 0.2;
             this.glViewer.deformFunctionPart(scale, 1, false);
+        }
+
+        private void compPGsimsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            this.glViewer.computePGsimilarity();
         }       
     }// Interface
 }// namespace

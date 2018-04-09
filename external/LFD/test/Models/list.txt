@@ -1,4 +1,0 @@
-Models/chair_other7
-Models/crib_1
-Models/desk_1
-Models/shelf_1

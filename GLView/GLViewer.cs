@@ -1547,13 +1547,12 @@ namespace FameBase
         private void LFD(List<Model> models)
         {
             // compare the similarity between shapes to select a set of diverse shapes
-            string path = @".\";
             string exe_path = @"..\..\external\LFD\";
             string alighmentCmd = "3DAlignment.exe";
-            string lfdCmd = "GroundTruth.exe";
+            string lfdCmd = "GroundTruth.exe"; // Note in the .exe file, the number of model is fixed to 4
             string prstCmdPara = "";
-            string listFile = "list.txt";
-            string prefix = ""; // "Models/";
+            string listFile = exe_path + "list.txt";
+            string prefix = @"Models\";
             string model_path = exe_path + prefix;
 
             if (!Directory.Exists(model_path))
@@ -1586,7 +1585,7 @@ namespace FameBase
             }
 
             // for "ground_trutch.exe"
-            string result_dir = exe_path + "Result\\";
+            string result_dir = exe_path + "Results\\";
             string compare_file = exe_path + "compare.txt";
             if (!Directory.Exists(result_dir))
             {
@@ -1625,7 +1624,8 @@ namespace FameBase
             process.WaitForExit();
 
             // 2. read model names from "list.txt" to compute the similarity of pairs of models using "GroundTruth.exe"
-            
+            prstCmdPara = models.Count.ToString();
+
             process = new Process();
             startInfo = new ProcessStartInfo();
             startInfo.WorkingDirectory = exe_path;
@@ -3323,6 +3323,13 @@ namespace FameBase
                 for (int i = 0; i < nPGs; ++i)
                 {
                     s = sr.ReadLine().Trim();
+                    // if pg category is stored
+                    int cat = -1;
+                    if (s.StartsWith("PGset: "))
+                    {
+                        cat = int.Parse(s.Substring(7));
+                        s = sr.ReadLine().Trim();
+                    }
                     strs = s.Split(separator);
                     List<Node> nodes = new List<Node>();
                     if (strs[0] != "") // empty
@@ -3349,6 +3356,7 @@ namespace FameBase
                         features[j] = double.Parse(strs[j]);
                     }
                     PartGroup pg = new PartGroup(nodes, features);
+                    pg.pgSet = cat;
                     graph._partGroups.Add(pg);
                 }
             }
@@ -3370,6 +3378,7 @@ namespace FameBase
                 foreach (PartGroup pg in pgs)
                 {
                     StringBuilder sb = new StringBuilder();
+                    sw.WriteLine("PGset: " + pg.pgSet);
                     foreach (Node node in pg._NODES)
                     {
                         sb.Append(node._INDEX.ToString());
@@ -3942,6 +3951,170 @@ namespace FameBase
             }
             _prevUserFunctions = new List<Functionality.Functions>(_currUserFunctions);
         }
+
+        private void computePGSimExternally()
+        {
+            // compare the similarity between shapes to select a set of diverse shapes
+            string exe_path = @"..\..\external\LFD\";
+            string alighmentCmd = "3DAlignment.exe";
+            string lfdCmd = "GroundTruth.exe"; // Note in the .exe file, the number of model is fixed to 4
+            string prstCmdPara = "";
+            string listFile = exe_path + "list.txt";
+            string prefix = @"PartGroups\";
+            string pg_path = exe_path + prefix;
+
+            if (!Directory.Exists(pg_path))
+            {
+                Directory.CreateDirectory(pg_path);
+            }
+
+            if (!File.Exists(alighmentCmd))
+            {
+                return;
+            }
+
+            // 1. write .obj file name to "list.txt"
+            // save each part group
+            List<PartGroup> pgs = new List<PartGroup>();
+            foreach (Model m in _ancesterModels)
+            {
+                foreach (PartGroup pg in m._GRAPH._partGroups)
+                {
+                    if (pg._NODES.Count > 0)
+                    {
+                        pgs.Add(pg);
+                    }
+                }
+            }
+            // collect meshes
+            int n = 0;
+            foreach (PartGroup pg in pgs)
+            {
+                string filename = pg_path + "pg_" + n.ToString() + ".obj";
+                using (StreamWriter sw = new StreamWriter(filename))
+                {
+                    int start = 0;
+                    foreach (Node node in pg._NODES)
+                    {
+                        Mesh mesh = node._PART._MESH;
+
+                        // vertex
+                        string s = "";
+                        for (int i = 0, j = 0; i < mesh.VertexCount; ++i)
+                        {
+                            s = "v";
+                            s += " " + mesh.VertexPos[j++].ToString();
+                            s += " " + mesh.VertexPos[j++].ToString();
+                            s += " " + mesh.VertexPos[j++].ToString();
+                            sw.WriteLine(s);
+                        }
+                        // face
+                        for (int i = 0, j = 0; i < mesh.FaceCount; ++i)
+                        {
+                            s = "f";
+                            s += " " + (mesh.FaceVertexIndex[j++] + 1 + start).ToString();
+                            s += " " + (mesh.FaceVertexIndex[j++] + 1 + start).ToString();
+                            s += " " + (mesh.FaceVertexIndex[j++] + 1 + start).ToString();
+                            sw.WriteLine(s);
+                        }
+                        start += mesh.VertexCount;
+                    }
+                }
+                ++n;
+            }
+
+            List<string> pg_list = new List<string>();
+            using (StreamWriter sw = new StreamWriter(listFile))
+            {
+                int id = 0;
+                foreach (PartGroup pg in pgs)
+                {
+                    string name = prefix + "pg_" + id.ToString();
+                    sw.WriteLine(name);
+                    pg_list.Add(name);
+                    ++id;
+                }
+            }
+
+            // for "ground_trutch.exe"
+            string result_dir = exe_path + "Results\\";
+            string compare_file = exe_path + "compare.txt";
+            if (!Directory.Exists(result_dir))
+            {
+                Directory.CreateDirectory(result_dir);
+            }
+            StreamWriter sw_compare = new StreamWriter(compare_file);
+            foreach (string cur in pg_list)
+            {
+                sw_compare.WriteLine(cur);
+                StreamWriter sw_cur = new StreamWriter(exe_path + cur + ".txt");
+                sw_cur.WriteLine(cur);
+                sw_cur.Close();
+            }
+            sw_compare.Close();
+            using (StreamReader sr = new StreamReader(listFile))
+            {
+                while (sr.Peek() > 0)
+                {
+                    string s = sr.ReadLine().Trim();
+                    string res_dir = result_dir + s;
+                    if (!Directory.Exists(res_dir))
+                    {
+                        Directory.CreateDirectory(res_dir);
+                    }
+                }
+            }
+
+            // 2. call "3DAlignment.exe" for computing features
+
+            Process process = new Process();
+            ProcessStartInfo startInfo = new ProcessStartInfo();
+            startInfo.WorkingDirectory = exe_path;
+            startInfo.FileName = alighmentCmd;
+            startInfo.Arguments = prstCmdPara;
+            process.StartInfo = startInfo;
+            process.Start();
+            process.WaitForExit();
+
+            // 2. read model names from "list.txt" to compute the similarity of pairs of models using "GroundTruth.exe"
+
+            process = new Process();
+            startInfo = new ProcessStartInfo();
+            startInfo.WorkingDirectory = exe_path;
+            startInfo.FileName = lfdCmd;
+            startInfo.Arguments = pgs.Count.ToString(); // prstCmdPara;
+            process.StartInfo = startInfo;
+            process.Start();
+            process.WaitForExit();
+
+            // read similarity
+            int[,] sims = new int[pgs.Count, pgs.Count];
+            string simDir = result_dir + "PartGroups\\";
+            for (int i = 0; i < pgs.Count; ++i) {
+                string simFile = simDir + "pg_" + i.ToString() + "_sim.txt";
+                using (StreamReader sr = new StreamReader(simFile)) {
+                    char[] separator = { ' ' };
+                    while (sr.Peek() > 0) {
+                    string s = sr.ReadLine().Trim();
+                        string[] arr = s.Split(separator);
+                        string next = arr[0].Substring(arr[0].LastIndexOf('_') + 1);
+                        int nextid = Int32.Parse(next);
+                        sims[i, nextid] = Int32.Parse(arr[1]);
+                    }
+                }
+            }
+        }
+
+        public void computePGsimilarity()
+        {
+            computePGSimExternally();
+            // save pg set info
+            //foreach (Model m in _ancesterModels) {
+            //    string filename = m._path + m._model_name + ".pg";
+            //    savePartGroupsOfAModelGraph(m._GRAPH._partGroups, filename);
+            //}
+        }// computePGsimilarity
+
 
         public void userSelectModel(Model m, bool addOrReomove)
         {
@@ -10663,7 +10836,9 @@ namespace FameBase
         }// runByUserSelection
 
         private bool isUserTargeted = false;
-
+        // a set of partGroup: pgs that have similar partial geometries
+        // whenever replacing a pair of part groups, check if a similar pair has already been used
+        private Dictionary<int, List<int>> crossOverDict;
         private List<Model> tryCrossOverTwoModelsWithFunctionalConstraints(Model m1, Model m2, int[] idx)
         {
             List<Model> res = new List<Model>();

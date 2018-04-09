@@ -2502,6 +2502,7 @@ namespace Component
         public List<List<Node>> _clusters = new List<List<Node>>();
 
         public List<PartGroup> _compatiblePGs;
+        public int pgSet = -1; // a set of part groups with similar geometry
 
         public PartGroup(List<Node> nodes, int g)
         {

@@ -1,4 +1,11 @@
-chair_other7
-crib_1
-desk_1
-shelf_1
+PartGroups\pg_0
+PartGroups\pg_1
+PartGroups\pg_2
+PartGroups\pg_3
+PartGroups\pg_4
+PartGroups\pg_5
+PartGroups\pg_6
+PartGroups\pg_7
+PartGroups\pg_8
+PartGroups\pg_9
+PartGroups\pg_10
