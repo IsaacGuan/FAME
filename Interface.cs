@@ -1146,16 +1146,17 @@ namespace FameBase
 
         private void runByUser_Click(object sender, EventArgs e)
         {
-            List<ModelViewer> modelViews = this.glViewer.runByUserSelection();
-            this.partBasket.Controls.Clear();
-            if (modelViews != null)
-            {
-                foreach (ModelViewer mv in modelViews)
-                {
-                    addModelViewerToRightPanel(mv);
-                }
-                this.outputSystemStatus(modelViews.Count.ToString() + " valid offspring shapes are generated.");
-            }
+            this.glViewer.autoRunTest();
+            //List<ModelViewer> modelViews = this.glViewer.runByUserSelection();
+            //this.partBasket.Controls.Clear();
+            //if (modelViews != null)
+            //{
+            //    foreach (ModelViewer mv in modelViews)
+            //    {
+            //        addModelViewerToRightPanel(mv);
+            //    }
+            //    this.outputSystemStatus(modelViews.Count.ToString() + " valid offspring shapes are generated.");
+            //}
         }
 
         public void clearCheckBoxes()

@@ -1344,6 +1344,10 @@ namespace Component
             {
                 return false;
             }
+            if (hasBadScale())
+            {
+                return false;
+            }
             if (!isValidContacts())
             {
                 return false;
@@ -1677,6 +1681,22 @@ namespace Component
             List<Node> bfs_nodes = this.bfs_regionGrowingAnyNodes(start);
             return _nodes.Count - bfs_nodes.Count;
         }// hasNIsolatedNodes
+
+        private bool hasBadScale()
+        {
+            Vector3d minScale = Vector3d.MinCoord;
+            Vector3d maxScale = Vector3d.MaxCoord;
+            foreach (Node node in _nodes)
+            {
+                node._PART._BOUNDINGBOX.computeMaxMin();
+                minScale = Vector3d.Min(minScale, node._PART._BOUNDINGBOX._scale);
+                maxScale = Vector3d.Max(maxScale, node._PART._BOUNDINGBOX._scale);
+            }
+            double[] scales = (maxScale - minScale).ToArray();
+            Array.Sort(scales);
+            double thr = 3;
+            return scales[2] / scales[0] > thr && scales[2] / scales[1] > thr;
+        }
 
         private bool isViolateOriginalScales()
         {

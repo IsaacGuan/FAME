@@ -1539,12 +1539,33 @@ namespace FameBase
             return true;
         }// computeShape2PoseAndIconFeatures
 
+
+        private int[] kMeansClustering(double[][] simMat, int numClusters)
+        {
+            Console.WriteLine("\nSetting numClusters to " + numClusters);
+
+            int[] clustering = KMeansDemo.Cluster(simMat, numClusters); 
+
+            Console.WriteLine("\nK-means clustering complete\n");
+
+            Console.WriteLine("Final clustering in internal form:\n");
+            KMeansDemo.ShowVector(clustering, true);
+
+            Console.WriteLine("Raw data by cluster:\n");
+            KMeansDemo.ShowClustered(simMat, clustering, numClusters, 1);
+
+            Console.WriteLine("\nEnd k-means clustering demo\n");
+            //Console.ReadLine();
+
+            return clustering;
+        }// clustering
+
         public void LFD_test()
         {
             this.LFD(_ancesterModels);
         }
 
-        private void LFD(List<Model> models)
+        private List<Model> LFD(List<Model> models)
         {
             // compare the similarity between shapes to select a set of diverse shapes
             string exe_path = @"..\..\external\LFD\";
@@ -1562,21 +1583,24 @@ namespace FameBase
 
             if (!File.Exists(alighmentCmd))
             {
-                return;
+                return null;
             }
 
             // 1. write .obj file name to "list.txt"
             if (models == null || models.Count < 2)
             {
                 MessageBox.Show("Not enough models for comparison.");
-                return;
+                return null;
             }
             List<string> model_list = new List<string>();
+            Dictionary<string, int> modelMap = new Dictionary<string, int>();
+            int n = 0;
             using (StreamWriter sw = new StreamWriter(listFile))
             {
                 foreach (Model model in models)
                 {
                     string name = prefix + model._model_name;
+                    modelMap.Add(name, n++);
                     sw.WriteLine(name);
                     model_list.Add(name);
                     string fullfilename = model_path + model._model_name + ".obj";
@@ -1634,8 +1658,243 @@ namespace FameBase
             process.StartInfo = startInfo;
             process.Start();
             process.WaitForExit();
-        }
 
+            // read similarity
+            int count = models.Count;
+            double[][] sims = new double[count][];
+            for (int i = 0; i < count; ++i) {
+                sims[i] = new double[count];
+            }
+            string simDir = result_dir + "Models\\";
+            for (int i = 0; i < count; ++i)
+            {
+                string simFile = simDir + models[i]._model_name + "_sim.txt";
+                using (StreamReader sr = new StreamReader(simFile))
+                {
+                    char[] separator = { ' ' };
+                    while (sr.Peek() > 0)
+                    {
+                        string s = sr.ReadLine().Trim();
+                        string[] arr = s.Split(separator);
+                        string next = arr[0].Substring(arr[0].LastIndexOf('\\') + 1);
+                        int nextid = -1;
+                        modelMap.TryGetValue(next, out nextid);
+                        if (nextid >= 0)
+                        {
+                            sims[i][nextid] = double.Parse(arr[1]);
+                        }
+                    }
+                }
+            }
+            int minCluster = _ancesterModels.Count;
+            int nCluster = Math.Max(minCluster, count / 10);
+            nCluster = Math.Min(nCluster, sims.Length);
+            int[] clusters = kMeansClustering(sims, nCluster);
+            List<int>[] clusterIds = new List<int>[nCluster];
+            for (int i = 0; i < nCluster; ++i)
+            {
+                if (clusterIds[i] == null)
+                {
+                    clusterIds[i] = new List<int>();
+                }
+                clusterIds[i].Add(i);
+            }
+            List<Model> representatives = new List<Model>();
+            for (int i = 0; i < nCluster; ++i)
+            {
+                Random rand = new Random();
+                int selected = rand.Next(clusterIds[i].Count);
+                representatives.Add(models[i]);
+            }
+            return representatives;
+        }// LFD
+
+
+        private void computePGSimExternally(List<Model> models)
+        {
+            // compare the similarity between shapes to select a set of diverse shapes
+            string exe_path = @"..\..\external\LFD\";
+            string alighmentCmd = "3DAlignment.exe";
+            string lfdCmd = "GroundTruth.exe"; // Note in the .exe file, the number of model is fixed to 4
+            string prstCmdPara = "";
+            string listFile = exe_path + "list.txt";
+            string prefix = @"PartGroups\";
+            string pg_path = exe_path + prefix;
+
+            if (!Directory.Exists(pg_path))
+            {
+                Directory.CreateDirectory(pg_path);
+            }
+
+            if (!File.Exists(alighmentCmd))
+            {
+                return;
+            }
+
+            // 1. write .obj file name to "list.txt"
+            // save each part group
+            List<PartGroup> pgs = new List<PartGroup>();
+            foreach (Model m in models)
+            {
+                foreach (PartGroup pg in m._GRAPH._partGroups)
+                {
+                    if (pg._NODES.Count > 0)
+                    {
+                        pgs.Add(pg);
+                    }
+                }
+            }
+            // collect meshes
+            int n = 0;
+            pgSimMatrixMap = new Dictionary<PartGroup, int>();
+            foreach (PartGroup pg in pgs)
+            {
+                string filename = pg_path + "pg_" + n.ToString() + ".obj";
+                pgSimMatrixMap.Add(pg, n);
+                using (StreamWriter sw = new StreamWriter(filename))
+                {
+                    int start = 0;
+                    foreach (Node node in pg._NODES)
+                    {
+                        Mesh mesh = node._PART._MESH;
+
+                        // vertex
+                        string s = "";
+                        for (int i = 0, j = 0; i < mesh.VertexCount; ++i)
+                        {
+                            s = "v";
+                            s += " " + mesh.VertexPos[j++].ToString();
+                            s += " " + mesh.VertexPos[j++].ToString();
+                            s += " " + mesh.VertexPos[j++].ToString();
+                            sw.WriteLine(s);
+                        }
+                        // face
+                        for (int i = 0, j = 0; i < mesh.FaceCount; ++i)
+                        {
+                            s = "f";
+                            s += " " + (mesh.FaceVertexIndex[j++] + 1 + start).ToString();
+                            s += " " + (mesh.FaceVertexIndex[j++] + 1 + start).ToString();
+                            s += " " + (mesh.FaceVertexIndex[j++] + 1 + start).ToString();
+                            sw.WriteLine(s);
+                        }
+                        start += mesh.VertexCount;
+                    }
+                }
+                ++n;
+            }
+
+            List<string> pg_list = new List<string>();
+            using (StreamWriter sw = new StreamWriter(listFile))
+            {
+                int id = 0;
+                foreach (PartGroup pg in pgs)
+                {
+                    string name = prefix + "pg_" + id.ToString();
+                    sw.WriteLine(name);
+                    pg_list.Add(name);
+                    ++id;
+                }
+            }
+
+            // for "ground_trutch.exe"
+            string result_dir = exe_path + "Results\\";
+            string compare_file = exe_path + "compare.txt";
+            if (!Directory.Exists(result_dir))
+            {
+                Directory.CreateDirectory(result_dir);
+            }
+            StreamWriter sw_compare = new StreamWriter(compare_file);
+            foreach (string cur in pg_list)
+            {
+                sw_compare.WriteLine(cur);
+                StreamWriter sw_cur = new StreamWriter(exe_path + cur + ".txt");
+                sw_cur.WriteLine(cur);
+                sw_cur.Close();
+            }
+            sw_compare.Close();
+            using (StreamReader sr = new StreamReader(listFile))
+            {
+                while (sr.Peek() > 0)
+                {
+                    string s = sr.ReadLine().Trim();
+                    string res_dir = result_dir + s;
+                    if (!Directory.Exists(res_dir))
+                    {
+                        Directory.CreateDirectory(res_dir);
+                    }
+                }
+            }
+
+            // 2. call "3DAlignment.exe" for computing features
+
+            Process process = new Process();
+            ProcessStartInfo startInfo = new ProcessStartInfo();
+            startInfo.WorkingDirectory = exe_path;
+            startInfo.FileName = alighmentCmd;
+            startInfo.Arguments = prstCmdPara;
+            process.StartInfo = startInfo;
+            process.Start();
+            process.WaitForExit();
+
+            // 2. read model names from "list.txt" to compute the similarity of pairs of models using "GroundTruth.exe"
+
+            process = new Process();
+            startInfo = new ProcessStartInfo();
+            startInfo.WorkingDirectory = exe_path;
+            startInfo.FileName = lfdCmd;
+            startInfo.Arguments = pgs.Count.ToString(); // prstCmdPara;
+            process.StartInfo = startInfo;
+            process.Start();
+            process.WaitForExit();
+
+            // read similarity
+            int count = pgs.Count;
+            double[][] sims = new double[count][];
+            for (int i = 0; i < count; ++i)
+            {
+                sims[i] = new double[count];
+            }
+            string simDir = result_dir + "PartGroups\\";
+            for (int i = 0; i < count; ++i)
+            {
+                string simFile = simDir + "pg_" + i.ToString() + "_sim.txt";
+                using (StreamReader sr = new StreamReader(simFile))
+                {
+                    char[] separator = { ' ' };
+                    while (sr.Peek() > 0)
+                    {
+                        string s = sr.ReadLine().Trim();
+                        string[] arr = s.Split(separator);
+                        string next = arr[0].Substring(arr[0].LastIndexOf('_') + 1);
+                        int nextid = Int32.Parse(next);
+                        sims[i][nextid] = double.Parse(arr[1]);
+                    }
+                }
+            }
+            simMatrix = new double[count, count];
+            for (int i = 0; i < count; ++i)
+            {
+                double maxVal = 0;
+                for (int j = 0; j < count; ++j)
+                {
+                    maxVal = Math.Max(maxVal, sims[i][j]);
+                }
+                for (int j = 0; j < count; ++j)
+                {
+                    simMatrix[i, j] = (double)sims[i][j] / maxVal;
+                }
+            }
+        } // computePGsimilarityExternally
+
+        public void computePGsimilarity()
+        {
+            //computePGSimExternally();
+            // save pg set info
+            //foreach (Model m in _ancesterModels) {
+            //    string filename = m._path + m._model_name + ".pg";
+            //    savePartGroupsOfAModelGraph(m._GRAPH._partGroups, filename);
+            //}
+        }// computePGsimilarity
 
         private double[] loadShape2Pose_OrientedGeodesicPCAFeatures(string filename)
         {
@@ -3951,169 +4210,6 @@ namespace FameBase
             }
             _prevUserFunctions = new List<Functionality.Functions>(_currUserFunctions);
         }
-
-        private void computePGSimExternally()
-        {
-            // compare the similarity between shapes to select a set of diverse shapes
-            string exe_path = @"..\..\external\LFD\";
-            string alighmentCmd = "3DAlignment.exe";
-            string lfdCmd = "GroundTruth.exe"; // Note in the .exe file, the number of model is fixed to 4
-            string prstCmdPara = "";
-            string listFile = exe_path + "list.txt";
-            string prefix = @"PartGroups\";
-            string pg_path = exe_path + prefix;
-
-            if (!Directory.Exists(pg_path))
-            {
-                Directory.CreateDirectory(pg_path);
-            }
-
-            if (!File.Exists(alighmentCmd))
-            {
-                return;
-            }
-
-            // 1. write .obj file name to "list.txt"
-            // save each part group
-            List<PartGroup> pgs = new List<PartGroup>();
-            foreach (Model m in _ancesterModels)
-            {
-                foreach (PartGroup pg in m._GRAPH._partGroups)
-                {
-                    if (pg._NODES.Count > 0)
-                    {
-                        pgs.Add(pg);
-                    }
-                }
-            }
-            // collect meshes
-            int n = 0;
-            foreach (PartGroup pg in pgs)
-            {
-                string filename = pg_path + "pg_" + n.ToString() + ".obj";
-                using (StreamWriter sw = new StreamWriter(filename))
-                {
-                    int start = 0;
-                    foreach (Node node in pg._NODES)
-                    {
-                        Mesh mesh = node._PART._MESH;
-
-                        // vertex
-                        string s = "";
-                        for (int i = 0, j = 0; i < mesh.VertexCount; ++i)
-                        {
-                            s = "v";
-                            s += " " + mesh.VertexPos[j++].ToString();
-                            s += " " + mesh.VertexPos[j++].ToString();
-                            s += " " + mesh.VertexPos[j++].ToString();
-                            sw.WriteLine(s);
-                        }
-                        // face
-                        for (int i = 0, j = 0; i < mesh.FaceCount; ++i)
-                        {
-                            s = "f";
-                            s += " " + (mesh.FaceVertexIndex[j++] + 1 + start).ToString();
-                            s += " " + (mesh.FaceVertexIndex[j++] + 1 + start).ToString();
-                            s += " " + (mesh.FaceVertexIndex[j++] + 1 + start).ToString();
-                            sw.WriteLine(s);
-                        }
-                        start += mesh.VertexCount;
-                    }
-                }
-                ++n;
-            }
-
-            List<string> pg_list = new List<string>();
-            using (StreamWriter sw = new StreamWriter(listFile))
-            {
-                int id = 0;
-                foreach (PartGroup pg in pgs)
-                {
-                    string name = prefix + "pg_" + id.ToString();
-                    sw.WriteLine(name);
-                    pg_list.Add(name);
-                    ++id;
-                }
-            }
-
-            // for "ground_trutch.exe"
-            string result_dir = exe_path + "Results\\";
-            string compare_file = exe_path + "compare.txt";
-            if (!Directory.Exists(result_dir))
-            {
-                Directory.CreateDirectory(result_dir);
-            }
-            StreamWriter sw_compare = new StreamWriter(compare_file);
-            foreach (string cur in pg_list)
-            {
-                sw_compare.WriteLine(cur);
-                StreamWriter sw_cur = new StreamWriter(exe_path + cur + ".txt");
-                sw_cur.WriteLine(cur);
-                sw_cur.Close();
-            }
-            sw_compare.Close();
-            using (StreamReader sr = new StreamReader(listFile))
-            {
-                while (sr.Peek() > 0)
-                {
-                    string s = sr.ReadLine().Trim();
-                    string res_dir = result_dir + s;
-                    if (!Directory.Exists(res_dir))
-                    {
-                        Directory.CreateDirectory(res_dir);
-                    }
-                }
-            }
-
-            // 2. call "3DAlignment.exe" for computing features
-
-            Process process = new Process();
-            ProcessStartInfo startInfo = new ProcessStartInfo();
-            startInfo.WorkingDirectory = exe_path;
-            startInfo.FileName = alighmentCmd;
-            startInfo.Arguments = prstCmdPara;
-            process.StartInfo = startInfo;
-            process.Start();
-            process.WaitForExit();
-
-            // 2. read model names from "list.txt" to compute the similarity of pairs of models using "GroundTruth.exe"
-
-            process = new Process();
-            startInfo = new ProcessStartInfo();
-            startInfo.WorkingDirectory = exe_path;
-            startInfo.FileName = lfdCmd;
-            startInfo.Arguments = pgs.Count.ToString(); // prstCmdPara;
-            process.StartInfo = startInfo;
-            process.Start();
-            process.WaitForExit();
-
-            // read similarity
-            int[,] sims = new int[pgs.Count, pgs.Count];
-            string simDir = result_dir + "PartGroups\\";
-            for (int i = 0; i < pgs.Count; ++i) {
-                string simFile = simDir + "pg_" + i.ToString() + "_sim.txt";
-                using (StreamReader sr = new StreamReader(simFile)) {
-                    char[] separator = { ' ' };
-                    while (sr.Peek() > 0) {
-                    string s = sr.ReadLine().Trim();
-                        string[] arr = s.Split(separator);
-                        string next = arr[0].Substring(arr[0].LastIndexOf('_') + 1);
-                        int nextid = Int32.Parse(next);
-                        sims[i, nextid] = Int32.Parse(arr[1]);
-                    }
-                }
-            }
-        }
-
-        public void computePGsimilarity()
-        {
-            computePGSimExternally();
-            // save pg set info
-            //foreach (Model m in _ancesterModels) {
-            //    string filename = m._path + m._model_name + ".pg";
-            //    savePartGroupsOfAModelGraph(m._GRAPH._partGroups, filename);
-            //}
-        }// computePGsimilarity
 
 
         public void userSelectModel(Model m, bool addOrReomove)
@@ -10724,6 +10820,10 @@ namespace FameBase
             cur.Sort();
             PartFormation partForm = new PartFormation(cur, rate);
             int n = parts.Count;
+            if (n >= this.partCombinationMemory.Length)
+            {
+                return null;
+            }
             List<PartFormation> iSet = this.partCombinationMemory[n];
             if (iSet == null)
             {
@@ -10747,6 +10847,56 @@ namespace FameBase
             return partForm;
         }// tryCreateANewPartFormation
 
+        bool useSimFilter = false;
+        Dictionary<PartGroup, int> pgSimMatrixMap;
+        double[,] simMatrix;
+
+        public void autoRunTest()
+        {
+            int maxIter = 10;
+            //crossedPairNames = new HashSet<string>();
+            //autoRunTestWithOrWithoutFilter(true, maxIter);
+            registerANewUser();
+            crossedPairNames = new HashSet<string>();
+            autoRunTestWithOrWithoutFilter(false, maxIter);
+            crossedPairNames = new HashSet<string>();
+        }
+
+        private void autoRunTestWithOrWithoutFilter(bool withFilter, int maxIter)
+        {
+            useSimFilter = withFilter;
+            int iter = 1;
+            Stopwatch stopWatch = new Stopwatch();
+            stopWatch.Start();
+            int nTotalModels = 0;
+            while (iter <= maxIter)
+            {
+                runByUserSelection();
+                if (_currGenModelViewers == null || _currGenModelViewers.Count == 0)
+                {
+                    break;
+                }
+                nTotalModels += _currGenModelViewers.Count;
+                // choose all models as source
+                foreach (ModelViewer mv in _currGenModelViewers)
+                {
+                    mv.selectCurrent();
+                }
+                ++iter;
+            }
+            long secs = stopWatch.ElapsedMilliseconds / 1000;
+            stopWatch.Stop();
+            // stats
+            string statsName = userFolder + "\\stats_" + (withFilter ? "withFilter" : "withoutFilter") + ".txt";
+            using (StreamWriter sw = new StreamWriter(statsName))
+            {
+                sw.WriteLine("#Iteration: " + iter.ToString());
+                sw.WriteLine("#Time: " + secs.ToString() + " seconds.");
+                sw.WriteLine("#Total models: " + nTotalModels.ToString());
+            }
+        }// autoRunTestWithOrWithoutFilter
+
+        HashSet<string> crossedPairNames = new HashSet<string>();
         public List<ModelViewer> runByUserSelection()
         {
             // evolve the current model
@@ -10796,18 +10946,41 @@ namespace FameBase
                 targetMoels = sourceModels;
             }
             List<Model> candidates = new List<Model>();
+            if (useSimFilter)
+            {
+                computePGSimExternally(targetMoels);
+            }
+            Dictionary<string, int[]> nameMap = new Dictionary<string, int[]>();
             foreach (Model m1 in targetMoels)
             {
                 int[] idx = new int[1];
+                string originalName = getOriginalModelName(m1._model_name);
+                if (!nameMap.ContainsKey(originalName))
+                {
+                    nameMap.Add(originalName, idx);
+                }
+                nameMap.TryGetValue(originalName, out idx);
                 List<Model> otherModels = new List<Model>(sourceModels);
-                otherModels.AddRange(targetMoels);
-                otherModels.Remove(m1);
+                foreach (Model m in targetMoels)
+                {
+                    if (m1 != m && !otherModels.Contains(m))
+                    {
+                        otherModels.Add(m);
+                    }
+                }
                 foreach (Model m2 in otherModels)
                 {
                     if (m1 == m2)
                     {
                         continue;
                     }
+                    string c1 = m1._model_name + m2._model_name;
+                    string c2 = m2._model_name + m1._model_name;
+                    if (crossedPairNames.Contains(c1) || crossedPairNames.Contains(c2))
+                    {
+                        continue;
+                    }
+                    crossedPairNames.Add(c1);
                     if (isUserTargeted)
                     {
                         m2._GRAPH._partGroups.Add(new PartGroup(m2._GRAPH._NODES, 0));
@@ -10826,10 +10999,20 @@ namespace FameBase
                 mv.unSelect();
                 _userSelectedModels.Remove(mv._MODEL);
             }
-            _currGenModelViewers = new List<ModelViewer>();
-            for (int i = 0; i < candidates.Count; ++i)
+            // keep distinct models
+            List<Model> selected = null;
+            if (_currGenId > 1)
             {
-                Model imodel = candidates[i];
+                selected = LFD(candidates);
+            }
+            if (selected == null || selected.Count == 0)
+            {
+                selected = candidates;
+            }
+            _currGenModelViewers = new List<ModelViewer>();
+            for (int i = 0; i < selected.Count; ++i)
+            {
+                Model imodel = selected[i];
                 _currGenModelViewers.Add(new ModelViewer(imodel, imodel._index, this, _currGenId));
             }
             return _currGenModelViewers;
@@ -10854,8 +11037,23 @@ namespace FameBase
                 for (int i = 0; i < pgs_1.Count; ++i)
                 {
                     List<Functionality.Functions> funcs1 = Functionality.getNodesFunctionalities(pgs_1[i]._NODES);
+                    int id1 = -1;
+                    if (pgSimMatrixMap != null)
+                    {
+                        pgSimMatrixMap.TryGetValue(pgs_1[i], out id1);
+                    }
                     for (int j = 0; j < pgs_2.Count; ++j)
                     {
+                        if (useSimFilter && pgSimMatrixMap != null)
+                        {
+                            int id2 = -1;
+                            double thr = 0.99;
+                            pgSimMatrixMap.TryGetValue(pgs_2[j], out id2);
+                            if (id1 != -1 && id2 != -1 && simMatrix[id1, id2] > thr && simMatrix[id2, id1] > thr)
+                            {
+                                continue;
+                            }
+                        }
                         List<Functionality.Functions> funcs2 = Functionality.getNodesFunctionalities(pgs_2[j]._NODES);
                         if (!Functionality.hasCompatibleFunctions(funcs1, funcs2) 
                             || Functionality.isTrivialReplace(pgs_1[i]._NODES, pgs_2[j]._NODES))
@@ -11131,6 +11329,17 @@ namespace FameBase
             m._GRAPH.adjustContacts();
         }// insertPlacement
 
+        private string getOriginalModelName(string name)
+        {
+            int slashId = name.IndexOf('-');
+            if (slashId == -1)
+            {
+                slashId = name.Length;
+            }
+            string originalModelName = name.Substring(0, slashId);
+            return originalModelName;
+        }
+
         private Model crossOverTwoModelsWithFunctionalConstraints(Model m1, Model m2, List<Node> nodes1, List<Node> nodes2, int idx)
         {
             // check if such combination already exists
@@ -11157,12 +11366,7 @@ namespace FameBase
             Model newModel = m1.Clone() as Model;
             // m1 starts name
             string name = m1._model_name;
-            int slashId = name.IndexOf('-');
-            if (slashId == -1)
-            {
-                slashId = name.Length;
-            }
-            string originalModelName = name.Substring(0, slashId);
+            string originalModelName = getOriginalModelName(name);
             newModel._path = crossoverFolder + "gen_" + _currGenId.ToString() + "\\";
             if (!Directory.Exists(newModel._path))
             {

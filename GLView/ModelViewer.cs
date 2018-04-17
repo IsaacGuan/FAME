@@ -97,6 +97,11 @@ namespace FameBase
             _isSelected = false;
         }
 
+        public void selectCurrent()
+        {
+            _isSelected = true;
+        }
+
         protected override void OnMouseClick(System.Windows.Forms.MouseEventArgs e)
         {
             base.OnMouseClick(e);

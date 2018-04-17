@@ -164,6 +164,7 @@
     <Compile Include="Geometry\SVD.cs" />
     <Compile Include="GLView\Camera.cs" />
     <Compile Include="GLView\GLDrawer.cs" />
+    <Compile Include="GLView\KMeansDemo.cs" />
     <Compile Include="GLView\ModelViewer.cs">
       <SubType>UserControl</SubType>
     </Compile>
