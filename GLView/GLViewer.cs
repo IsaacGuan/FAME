@@ -1687,24 +1687,46 @@ namespace FameBase
                 }
             }
             int minCluster = _ancesterModels.Count;
-            int nCluster = Math.Max(minCluster, count / 10);
+            int nCluster = minCluster; // Math.Max(minCluster, count / 10);
             nCluster = Math.Min(nCluster, sims.Length);
             int[] clusters = kMeansClustering(sims, nCluster);
+            // in each cluster, record the index of the corresponding models
             List<int>[] clusterIds = new List<int>[nCluster];
             for (int i = 0; i < nCluster; ++i)
             {
-                if (clusterIds[i] == null)
-                {
-                    clusterIds[i] = new List<int>();
-                }
-                clusterIds[i].Add(i);
+                clusterIds[i] = new List<int>();
+            }
+            for (int i = 0; i < clusters.Length; ++i)
+            {
+                clusterIds[clusters[i]].Add(i);
             }
             List<Model> representatives = new List<Model>();
+            int numInCluster = 2;
             for (int i = 0; i < nCluster; ++i)
             {
                 Random rand = new Random();
-                int selected = rand.Next(clusterIds[i].Count);
-                representatives.Add(models[i]);
+                int m = Math.Min(numInCluster, clusterIds[i].Count);
+                if (m == clusterIds[i].Count)
+                {
+                    for (int j = 0; j < clusterIds[i].Count; ++j)
+                    {
+                        representatives.Add(models[clusterIds[i][j]]);
+                    }
+                }
+                else
+                {
+                    HashSet<int> ids = new HashSet<int>();
+                    for (int j = 0; j < m; ++j)
+                    {
+                        int selected = rand.Next(clusterIds[i].Count);
+                        while (ids.Contains(selected))
+                        {
+                            selected = rand.Next(clusterIds[i].Count);
+                        }
+                        representatives.Add(models[clusterIds[i][selected]]);
+                        ids.Add(selected);
+                    }
+                }
             }
             return representatives;
         }// LFD
@@ -1879,6 +1901,9 @@ namespace FameBase
                 {
                     maxVal = Math.Max(maxVal, sims[i][j]);
                 }
+                double[] cur = sims[i];
+                int[] keys = new int[count];
+                Array.Sort(cur, keys);
                 for (int j = 0; j < count; ++j)
                 {
                     simMatrix[i, j] = (double)sims[i][j] / maxVal;
@@ -10854,9 +10879,10 @@ namespace FameBase
         public void autoRunTest()
         {
             int maxIter = 10;
-            //crossedPairNames = new HashSet<string>();
-            //autoRunTestWithOrWithoutFilter(true, maxIter);
+            crossedPairNames = new HashSet<string>();
+            autoRunTestWithOrWithoutFilter(true, maxIter);
             registerANewUser();
+            _currGenId = 1;
             crossedPairNames = new HashSet<string>();
             autoRunTestWithOrWithoutFilter(false, maxIter);
             crossedPairNames = new HashSet<string>();
@@ -10897,6 +10923,7 @@ namespace FameBase
         }// autoRunTestWithOrWithoutFilter
 
         HashSet<string> crossedPairNames = new HashSet<string>();
+        int nTotalCandidate = 0;
         public List<ModelViewer> runByUserSelection()
         {
             // evolve the current model
@@ -10987,6 +11014,7 @@ namespace FameBase
                     }
                     List<Model> res = this.tryCrossOverTwoModelsWithFunctionalConstraints(m1, m2, idx);
                     candidates.AddRange(res);
+                    Console.WriteLine("The number of candidates: " + candidates.Count.ToString());
                     int pgid = m2._GRAPH._partGroups.Count - 1;
                     if (isUserTargeted)
                     {
@@ -11004,12 +11032,13 @@ namespace FameBase
             if (_currGenId > 1)
             {
                 selected = LFD(candidates);
+                //selected = candidates;
             }
             if (selected == null || selected.Count == 0)
             {
                 selected = candidates;
             }
-            _currGenModelViewers = new List<ModelViewer>();
+            _currGenModelViewers.Clear();
             for (int i = 0; i < selected.Count; ++i)
             {
                 Model imodel = selected[i];

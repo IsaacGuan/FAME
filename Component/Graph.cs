@@ -1561,12 +1561,27 @@ namespace Component
         {
             // if the functional part is tilted
             int nFuncParts = 0;
+            bool hasMainFunc = false;
             foreach (Node node in _nodes)
             {
                 if (node._funcs.Contains(Functionality.Functions.PLACEMENT))
                 {
                     ++nFuncParts;
                 }
+                if (!hasMainFunc)
+                {
+                    foreach (Functionality.Functions f in node._funcs)
+                    {
+                        if (Functionality.IsMainFunction(f))
+                        {
+                            hasMainFunc = true;
+                        }
+                    }
+                }
+            }
+            if (!hasMainFunc)
+            {
+                return false;
             }
             int nMaxTitled = Math.Min(1, nFuncParts);
             int nTitled = 0;
