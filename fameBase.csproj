@@ -156,6 +156,7 @@
     <Compile Include="Component\Graph.cs" />
     <Compile Include="Component\HumanPose.cs" />
     <Compile Include="Component\Part.cs" />
+    <Compile Include="Extensions\MultiDimensionalArrayExtensions.cs" />
     <Compile Include="Geometry\Common.cs" />
     <Compile Include="Geometry\ConvexHull.cs" />
     <Compile Include="Geometry\JsonFile.cs" />

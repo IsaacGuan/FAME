@@ -35,30 +35,16 @@
             this.loadAPartBasedModel = new System.Windows.Forms.ToolStripMenuItem();
             this.saveAModelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.loadPartBasedModels = new System.Windows.Forms.ToolStripMenuItem();
-            this.importModelsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.saveRepPairsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.screenCaptureToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.autoSnapshotsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.batchLoadTestToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.lFDTestToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.file = new System.Windows.Forms.ToolStripDropDownButton();
             this.open3D = new System.Windows.Forms.ToolStripMenuItem();
-            this.open3DGroupedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.import3D = new System.Windows.Forms.ToolStripMenuItem();
             this.saveAs3D = new System.Windows.Forms.ToolStripMenuItem();
-            this.loadTriMeshToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.loadHumanPoseToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveHumanPoseToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.importHumanPoseToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.saveMergedMeshToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.unitifyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.importShapeNetToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.loadFunctionlityModelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.loadOriPatchToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.savePointFeatureToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.loadOptPatchToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.saveoffFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.loadOriPatchOnlyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.loadFuncPatchToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.loadFuncSpaceToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.loadValidityMatrixToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -76,6 +62,7 @@
             this.swtichYZToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.randomColorToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.reSampleToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.compPGsimsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.renderOption = new System.Windows.Forms.ToolStripDropDownButton();
             this.vertexToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.wireFrameToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -107,18 +94,12 @@
             this.refitcbToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.refitaxisalignedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.clearPGsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.renderOptions = new System.Windows.Forms.ToolStripDropDownButton();
-            this.translucentPoseToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.XYbutton = new System.Windows.Forms.ToolStripButton();
-            this.YZbutton = new System.Windows.Forms.ToolStripButton();
-            this.XZbutton = new System.Windows.Forms.ToolStripButton();
             this.toolStripDropDownButton1 = new System.Windows.Forms.ToolStripDropDownButton();
             this.symmetryToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.sortResToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.rankByCatToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.rankByMultiToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.partialMatchingToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.testToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.autoGenerateToolStripMenuItem = new System.Windows.Forms.ToolStripButton();
             this.viewPanel = new System.Windows.Forms.SplitContainer();
             this.fileNameTabs = new System.Windows.Forms.TabControl();
@@ -147,7 +128,6 @@
             this.prev_mesh = new System.Windows.Forms.Button();
             this.next_mesh = new System.Windows.Forms.Button();
             this.statsLabel = new System.Windows.Forms.Label();
-            this.glViewer = new FameBase.GLViewer();
             this.partBasket = new System.Windows.Forms.FlowLayoutPanel();
             this.modelViewLayoutPanel = new System.Windows.Forms.FlowLayoutPanel();
             this.strokeColorDialog = new System.Windows.Forms.ColorDialog();
@@ -182,7 +162,7 @@
             this.groundSupportToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.connectorToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.partGroupToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.compPGsimsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.glViewer = new FameBase.GLViewer();
             this.menu.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.viewPanel)).BeginInit();
             this.viewPanel.Panel1.SuspendLayout();
@@ -205,10 +185,6 @@
             this.renderOption,
             this.selectElement,
             this.modelEdit,
-            this.renderOptions,
-            this.XYbutton,
-            this.YZbutton,
-            this.XZbutton,
             this.toolStripDropDownButton1,
             this.autoGenerateToolStripMenuItem});
             this.menu.Location = new System.Drawing.Point(0, 0);
@@ -222,13 +198,7 @@
             this.model.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.loadAPartBasedModel,
             this.saveAModelToolStripMenuItem,
-            this.loadPartBasedModels,
-            this.importModelsToolStripMenuItem,
-            this.saveRepPairsToolStripMenuItem,
-            this.screenCaptureToolStripMenuItem,
-            this.autoSnapshotsToolStripMenuItem,
-            this.batchLoadTestToolStripMenuItem,
-            this.lFDTestToolStripMenuItem});
+            this.loadPartBasedModels});
             this.model.Image = ((System.Drawing.Image)(resources.GetObject("model.Image")));
             this.model.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.model.Name = "model";
@@ -239,86 +209,36 @@
             // loadAPartBasedModel
             // 
             this.loadAPartBasedModel.Name = "loadAPartBasedModel";
-            this.loadAPartBasedModel.Size = new System.Drawing.Size(157, 22);
+            this.loadAPartBasedModel.Size = new System.Drawing.Size(146, 22);
             this.loadAPartBasedModel.Text = "Load a model";
             this.loadAPartBasedModel.Click += new System.EventHandler(this.loadAPartBasedModel_Click);
             // 
             // saveAModelToolStripMenuItem
             // 
             this.saveAModelToolStripMenuItem.Name = "saveAModelToolStripMenuItem";
-            this.saveAModelToolStripMenuItem.Size = new System.Drawing.Size(157, 22);
+            this.saveAModelToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
             this.saveAModelToolStripMenuItem.Text = "Save a model";
             this.saveAModelToolStripMenuItem.Click += new System.EventHandler(this.saveAModelToolStripMenuItem_Click);
             // 
             // loadPartBasedModels
             // 
             this.loadPartBasedModels.Name = "loadPartBasedModels";
-            this.loadPartBasedModels.Size = new System.Drawing.Size(157, 22);
+            this.loadPartBasedModels.Size = new System.Drawing.Size(146, 22);
             this.loadPartBasedModels.Text = "Load models";
             this.loadPartBasedModels.Click += new System.EventHandler(this.loadPartBasedModels_Click);
-            // 
-            // importModelsToolStripMenuItem
-            // 
-            this.importModelsToolStripMenuItem.Name = "importModelsToolStripMenuItem";
-            this.importModelsToolStripMenuItem.Size = new System.Drawing.Size(157, 22);
-            this.importModelsToolStripMenuItem.Text = "Import models";
-            this.importModelsToolStripMenuItem.Click += new System.EventHandler(this.importModelsToolStripMenuItem_Click);
-            // 
-            // saveRepPairsToolStripMenuItem
-            // 
-            this.saveRepPairsToolStripMenuItem.Name = "saveRepPairsToolStripMenuItem";
-            this.saveRepPairsToolStripMenuItem.Size = new System.Drawing.Size(157, 22);
-            this.saveRepPairsToolStripMenuItem.Text = "Save Rep pairs";
-            this.saveRepPairsToolStripMenuItem.Click += new System.EventHandler(this.saveRepPairsToolStripMenuItem_Click);
-            // 
-            // screenCaptureToolStripMenuItem
-            // 
-            this.screenCaptureToolStripMenuItem.Name = "screenCaptureToolStripMenuItem";
-            this.screenCaptureToolStripMenuItem.Size = new System.Drawing.Size(157, 22);
-            this.screenCaptureToolStripMenuItem.Text = "Screen capture";
-            this.screenCaptureToolStripMenuItem.Click += new System.EventHandler(this.screenCaptureToolStripMenuItem_Click);
-            // 
-            // autoSnapshotsToolStripMenuItem
-            // 
-            this.autoSnapshotsToolStripMenuItem.Name = "autoSnapshotsToolStripMenuItem";
-            this.autoSnapshotsToolStripMenuItem.Size = new System.Drawing.Size(157, 22);
-            this.autoSnapshotsToolStripMenuItem.Text = "Auto snapshots";
-            this.autoSnapshotsToolStripMenuItem.Click += new System.EventHandler(this.autoSnapshotsToolStripMenuItem_Click);
-            // 
-            // batchLoadTestToolStripMenuItem
-            // 
-            this.batchLoadTestToolStripMenuItem.Name = "batchLoadTestToolStripMenuItem";
-            this.batchLoadTestToolStripMenuItem.Size = new System.Drawing.Size(157, 22);
-            this.batchLoadTestToolStripMenuItem.Text = "Batch Load Test";
-            this.batchLoadTestToolStripMenuItem.Click += new System.EventHandler(this.batchLoadTestToolStripMenuItem_Click);
-            // 
-            // lFDTestToolStripMenuItem
-            // 
-            this.lFDTestToolStripMenuItem.Name = "lFDTestToolStripMenuItem";
-            this.lFDTestToolStripMenuItem.Size = new System.Drawing.Size(157, 22);
-            this.lFDTestToolStripMenuItem.Text = "LFD test";
-            this.lFDTestToolStripMenuItem.Click += new System.EventHandler(this.lFDTestToolStripMenuItem_Click);
             // 
             // file
             // 
             this.file.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.open3D,
-            this.open3DGroupedToolStripMenuItem,
             this.import3D,
             this.saveAs3D,
-            this.loadTriMeshToolStripMenuItem,
             this.loadHumanPoseToolStripMenuItem,
             this.saveHumanPoseToolStripMenuItem,
             this.importHumanPoseToolStripMenuItem,
-            this.saveMergedMeshToolStripMenuItem,
-            this.unitifyToolStripMenuItem,
-            this.importShapeNetToolStripMenuItem,
             this.loadFunctionlityModelToolStripMenuItem,
-            this.loadOriPatchToolStripMenuItem,
             this.savePointFeatureToolStripMenuItem,
             this.loadOptPatchToolStripMenuItem,
-            this.saveoffFileToolStripMenuItem,
-            this.loadOriPatchOnlyToolStripMenuItem,
             this.loadFuncPatchToolStripMenuItem,
             this.loadFuncSpaceToolStripMenuItem,
             this.loadValidityMatrixToolStripMenuItem});
@@ -336,13 +256,6 @@
             this.open3D.Text = "Open 3D file";
             this.open3D.Click += new System.EventHandler(this.open3D_Click);
             // 
-            // open3DGroupedToolStripMenuItem
-            // 
-            this.open3DGroupedToolStripMenuItem.Name = "open3DGroupedToolStripMenuItem";
-            this.open3DGroupedToolStripMenuItem.Size = new System.Drawing.Size(201, 22);
-            this.open3DGroupedToolStripMenuItem.Text = "Open 3D grouped";
-            this.open3DGroupedToolStripMenuItem.Click += new System.EventHandler(this.open3DGroupedToolStripMenuItem_Click);
-            // 
             // import3D
             // 
             this.import3D.Name = "import3D";
@@ -356,13 +269,6 @@
             this.saveAs3D.Size = new System.Drawing.Size(201, 22);
             this.saveAs3D.Text = "Save as 3D file";
             this.saveAs3D.Click += new System.EventHandler(this.saveAs3D_Click);
-            // 
-            // loadTriMeshToolStripMenuItem
-            // 
-            this.loadTriMeshToolStripMenuItem.Name = "loadTriMeshToolStripMenuItem";
-            this.loadTriMeshToolStripMenuItem.Size = new System.Drawing.Size(201, 22);
-            this.loadTriMeshToolStripMenuItem.Text = "Load As TriMesh";
-            this.loadTriMeshToolStripMenuItem.Click += new System.EventHandler(this.loadTriMeshToolStripMenuItem_Click);
             // 
             // loadHumanPoseToolStripMenuItem
             // 
@@ -385,42 +291,12 @@
             this.importHumanPoseToolStripMenuItem.Text = "Import HumanPose";
             this.importHumanPoseToolStripMenuItem.Click += new System.EventHandler(this.importHumanPoseToolStripMenuItem_Click);
             // 
-            // saveMergedMeshToolStripMenuItem
-            // 
-            this.saveMergedMeshToolStripMenuItem.Name = "saveMergedMeshToolStripMenuItem";
-            this.saveMergedMeshToolStripMenuItem.Size = new System.Drawing.Size(201, 22);
-            this.saveMergedMeshToolStripMenuItem.Text = "Save merged mesh";
-            this.saveMergedMeshToolStripMenuItem.Click += new System.EventHandler(this.saveMergedMeshToolStripMenuItem_Click);
-            // 
-            // unitifyToolStripMenuItem
-            // 
-            this.unitifyToolStripMenuItem.Checked = true;
-            this.unitifyToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.unitifyToolStripMenuItem.Name = "unitifyToolStripMenuItem";
-            this.unitifyToolStripMenuItem.Size = new System.Drawing.Size(201, 22);
-            this.unitifyToolStripMenuItem.Text = "Unitify";
-            this.unitifyToolStripMenuItem.Click += new System.EventHandler(this.unitifyToolStripMenuItem_Click);
-            // 
-            // importShapeNetToolStripMenuItem
-            // 
-            this.importShapeNetToolStripMenuItem.Name = "importShapeNetToolStripMenuItem";
-            this.importShapeNetToolStripMenuItem.Size = new System.Drawing.Size(201, 22);
-            this.importShapeNetToolStripMenuItem.Text = "Import ShapeNet";
-            this.importShapeNetToolStripMenuItem.Click += new System.EventHandler(this.importShapeNetToolStripMenuItem_Click);
-            // 
             // loadFunctionlityModelToolStripMenuItem
             // 
             this.loadFunctionlityModelToolStripMenuItem.Name = "loadFunctionlityModelToolStripMenuItem";
             this.loadFunctionlityModelToolStripMenuItem.Size = new System.Drawing.Size(201, 22);
             this.loadFunctionlityModelToolStripMenuItem.Text = "Load functionlity model";
             this.loadFunctionlityModelToolStripMenuItem.Click += new System.EventHandler(this.loadFunctionlityModelToolStripMenuItem_Click);
-            // 
-            // loadOriPatchToolStripMenuItem
-            // 
-            this.loadOriPatchToolStripMenuItem.Name = "loadOriPatchToolStripMenuItem";
-            this.loadOriPatchToolStripMenuItem.Size = new System.Drawing.Size(201, 22);
-            this.loadOriPatchToolStripMenuItem.Text = "Load ori patch";
-            this.loadOriPatchToolStripMenuItem.Click += new System.EventHandler(this.loadOriPatchToolStripMenuItem_Click);
             // 
             // savePointFeatureToolStripMenuItem
             // 
@@ -435,20 +311,6 @@
             this.loadOptPatchToolStripMenuItem.Size = new System.Drawing.Size(201, 22);
             this.loadOptPatchToolStripMenuItem.Text = "Load opt patch";
             this.loadOptPatchToolStripMenuItem.Click += new System.EventHandler(this.loadOptPatchToolStripMenuItem_Click);
-            // 
-            // saveoffFileToolStripMenuItem
-            // 
-            this.saveoffFileToolStripMenuItem.Name = "saveoffFileToolStripMenuItem";
-            this.saveoffFileToolStripMenuItem.Size = new System.Drawing.Size(201, 22);
-            this.saveoffFileToolStripMenuItem.Text = "Save .off file";
-            this.saveoffFileToolStripMenuItem.Click += new System.EventHandler(this.saveoffFileToolStripMenuItem_Click);
-            // 
-            // loadOriPatchOnlyToolStripMenuItem
-            // 
-            this.loadOriPatchOnlyToolStripMenuItem.Name = "loadOriPatchOnlyToolStripMenuItem";
-            this.loadOriPatchOnlyToolStripMenuItem.Size = new System.Drawing.Size(201, 22);
-            this.loadOriPatchOnlyToolStripMenuItem.Text = "Load ori patch only";
-            this.loadOriPatchOnlyToolStripMenuItem.Click += new System.EventHandler(this.loadOriPatchOnlyToolStripMenuItem_Click);
             // 
             // loadFuncPatchToolStripMenuItem
             // 
@@ -585,6 +447,13 @@
             this.reSampleToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.reSampleToolStripMenuItem.Text = "ReSample";
             this.reSampleToolStripMenuItem.Click += new System.EventHandler(this.reSampleToolStripMenuItem_Click);
+            // 
+            // compPGsimsToolStripMenuItem
+            // 
+            this.compPGsimsToolStripMenuItem.Name = "compPGsimsToolStripMenuItem";
+            this.compPGsimsToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.compPGsimsToolStripMenuItem.Text = "CompPGsims";
+            this.compPGsimsToolStripMenuItem.Click += new System.EventHandler(this.compPGsimsToolStripMenuItem_Click);
             // 
             // renderOption
             // 
@@ -847,56 +716,6 @@
             this.clearPGsToolStripMenuItem.Text = "Clear PGs";
             this.clearPGsToolStripMenuItem.Click += new System.EventHandler(this.clearPGsToolStripMenuItem_Click);
             // 
-            // renderOptions
-            // 
-            this.renderOptions.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.translucentPoseToolStripMenuItem});
-            this.renderOptions.Image = ((System.Drawing.Image)(resources.GetObject("renderOptions.Image")));
-            this.renderOptions.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.renderOptions.Name = "renderOptions";
-            this.renderOptions.Size = new System.Drawing.Size(57, 36);
-            this.renderOptions.Text = "Render";
-            this.renderOptions.TextImageRelation = System.Windows.Forms.TextImageRelation.Overlay;
-            // 
-            // translucentPoseToolStripMenuItem
-            // 
-            this.translucentPoseToolStripMenuItem.Checked = true;
-            this.translucentPoseToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.translucentPoseToolStripMenuItem.Name = "translucentPoseToolStripMenuItem";
-            this.translucentPoseToolStripMenuItem.Size = new System.Drawing.Size(163, 22);
-            this.translucentPoseToolStripMenuItem.Text = "Translucent pose";
-            this.translucentPoseToolStripMenuItem.Click += new System.EventHandler(this.translucentPoseToolStripMenuItem_Click);
-            // 
-            // XYbutton
-            // 
-            this.XYbutton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.XYbutton.Image = ((System.Drawing.Image)(resources.GetObject("XYbutton.Image")));
-            this.XYbutton.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.XYbutton.Name = "XYbutton";
-            this.XYbutton.Size = new System.Drawing.Size(25, 36);
-            this.XYbutton.Text = "XY";
-            this.XYbutton.Click += new System.EventHandler(this.XYbutton_Click);
-            // 
-            // YZbutton
-            // 
-            this.YZbutton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.YZbutton.Image = ((System.Drawing.Image)(resources.GetObject("YZbutton.Image")));
-            this.YZbutton.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.YZbutton.Name = "YZbutton";
-            this.YZbutton.Size = new System.Drawing.Size(25, 36);
-            this.YZbutton.Text = "YZ";
-            this.YZbutton.Click += new System.EventHandler(this.YZbutton_Click);
-            // 
-            // XZbutton
-            // 
-            this.XZbutton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.XZbutton.Image = ((System.Drawing.Image)(resources.GetObject("XZbutton.Image")));
-            this.XZbutton.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.XZbutton.Name = "XZbutton";
-            this.XZbutton.Size = new System.Drawing.Size(25, 36);
-            this.XZbutton.Text = "XZ";
-            this.XZbutton.Click += new System.EventHandler(this.XZbutton_Click);
-            // 
             // toolStripDropDownButton1
             // 
             this.toolStripDropDownButton1.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -904,8 +723,7 @@
             this.sortResToolStripMenuItem,
             this.rankByCatToolStripMenuItem,
             this.rankByMultiToolStripMenuItem,
-            this.partialMatchingToolStripMenuItem,
-            this.testToolStripMenuItem});
+            this.partialMatchingToolStripMenuItem});
             this.toolStripDropDownButton1.Image = ((System.Drawing.Image)(resources.GetObject("toolStripDropDownButton1.Image")));
             this.toolStripDropDownButton1.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripDropDownButton1.Name = "toolStripDropDownButton1";
@@ -947,13 +765,6 @@
             this.partialMatchingToolStripMenuItem.Size = new System.Drawing.Size(161, 22);
             this.partialMatchingToolStripMenuItem.Text = "Partial Matching";
             this.partialMatchingToolStripMenuItem.Click += new System.EventHandler(this.partialMatchingToolStripMenuItem_Click);
-            // 
-            // testToolStripMenuItem
-            // 
-            this.testToolStripMenuItem.Name = "testToolStripMenuItem";
-            this.testToolStripMenuItem.Size = new System.Drawing.Size(161, 22);
-            this.testToolStripMenuItem.Text = "test";
-            this.testToolStripMenuItem.Click += new System.EventHandler(this.testToolStripMenuItem_Click);
             // 
             // autoGenerateToolStripMenuItem
             // 
@@ -1189,7 +1000,6 @@
             "Handcart",
             "Hanger",
             "Hook",
-            "Robot",
             "Shelf",
             "Stand",
             "Stroller",
@@ -1309,26 +1119,6 @@
             this.statsLabel.Size = new System.Drawing.Size(41, 16);
             this.statsLabel.TabIndex = 14;
             this.statsLabel.Text = "Stats:";
-            // 
-            // glViewer
-            // 
-            this.glViewer.AccumBits = ((byte)(0));
-            this.glViewer.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.glViewer.AutoCheckErrors = false;
-            this.glViewer.AutoFinish = false;
-            this.glViewer.AutoMakeCurrent = true;
-            this.glViewer.AutoSwapBuffers = true;
-            this.glViewer.BackColor = System.Drawing.Color.Black;
-            this.glViewer.ColorBits = ((byte)(32));
-            this.glViewer.CurrentUIMode = FameBase.GLViewer.UIMode.Viewing;
-            this.glViewer.DepthBits = ((byte)(16));
-            this.glViewer.Location = new System.Drawing.Point(216, 3);
-            this.glViewer.Name = "glViewer";
-            this.glViewer.Size = new System.Drawing.Size(626, 511);
-            this.glViewer.StencilBits = ((byte)(0));
-            this.glViewer.TabIndex = 16;
             // 
             // partBasket
             // 
@@ -1598,12 +1388,25 @@
             this.partGroupToolStripMenuItem.Text = "Part Group";
             this.partGroupToolStripMenuItem.Click += new System.EventHandler(this.partGroupToolStripMenuItem_Click);
             // 
-            // compPGsimsToolStripMenuItem
+            // glViewer
             // 
-            this.compPGsimsToolStripMenuItem.Name = "compPGsimsToolStripMenuItem";
-            this.compPGsimsToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.compPGsimsToolStripMenuItem.Text = "CompPGsims";
-            this.compPGsimsToolStripMenuItem.Click += new System.EventHandler(this.compPGsimsToolStripMenuItem_Click);
+            this.glViewer.AccumBits = ((byte)(0));
+            this.glViewer.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.glViewer.AutoCheckErrors = false;
+            this.glViewer.AutoFinish = false;
+            this.glViewer.AutoMakeCurrent = true;
+            this.glViewer.AutoSwapBuffers = true;
+            this.glViewer.BackColor = System.Drawing.Color.Black;
+            this.glViewer.ColorBits = ((byte)(32));
+            this.glViewer.CurrentUIMode = FameBase.GLViewer.UIMode.Viewing;
+            this.glViewer.DepthBits = ((byte)(16));
+            this.glViewer.Location = new System.Drawing.Point(216, 3);
+            this.glViewer.Name = "glViewer";
+            this.glViewer.Size = new System.Drawing.Size(626, 511);
+            this.glViewer.StencilBits = ((byte)(0));
+            this.glViewer.TabIndex = 16;
             // 
             // Interface
             // 
@@ -1663,7 +1466,6 @@
         private System.Windows.Forms.ToolStripMenuItem reloadViewToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem saveViewToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem loadViewToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem loadTriMeshToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem renderToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem clearAllToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem boxToolStripMenuItem;
@@ -1680,9 +1482,7 @@
         private System.Windows.Forms.FlowLayoutPanel partBasket;
         private System.Windows.Forms.ToolStripMenuItem loadHumanPoseToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem saveHumanPoseToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem unitifyToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem axesToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem saveMergedMeshToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem swtichYZToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem switchXZToolStripMenuItem;
         private System.Windows.Forms.ToolStripDropDownButton modelEdit;
@@ -1695,22 +1495,13 @@
         private System.Windows.Forms.ToolStripMenuItem replicateToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem groundToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem composeToolStripMenuItem;
-        private System.Windows.Forms.ToolStripDropDownButton renderOptions;
-        private System.Windows.Forms.ToolStripMenuItem translucentPoseToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem importModelsToolStripMenuItem;
-        private System.Windows.Forms.ToolStripButton YZbutton;
-        private System.Windows.Forms.ToolStripButton XYbutton;
-        private System.Windows.Forms.ToolStripButton XZbutton;
         private System.Windows.Forms.ToolStripMenuItem importHumanPoseToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem graphToolStripMenuItem;
         private System.Windows.Forms.ToolStripDropDownButton toolStripDropDownButton1;
         private System.Windows.Forms.ToolStripMenuItem selectToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem symmetryToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem randomColorToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem open3DGroupedToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem contactToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem saveRepPairsToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem screenCaptureToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem addEdgeToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem delEdgeToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem functionalityToolStripMenuItem;
@@ -1720,28 +1511,23 @@
         private System.Windows.Forms.ToolStripMenuItem handplaceToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem groundtouchingToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem removeallToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem autoSnapshotsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem refitcyToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem refitcbToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem supportToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem importShapeNetToolStripMenuItem;
         private System.Windows.Forms.Button next_mesh;
         private System.Windows.Forms.Panel prev_next_panel;
         private System.Windows.Forms.Button prev_mesh;
         private System.Windows.Forms.TextBox mesh_name;
         private System.Windows.Forms.ToolStripButton autoGenerateToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem loadOriPatchToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem loadFunctionlityModelToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem functionalSpaceToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem savePointFeatureToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem samplePointsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem loadOptPatchToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem hangToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem saveoffFileToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem reSampleToolStripMenuItem;
         private System.Windows.Forms.Button next_fs;
         private System.Windows.Forms.Button prev_fs;
-        private System.Windows.Forms.ToolStripMenuItem loadOriPatchOnlyToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem loadFuncPatchToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem loadFuncSpaceToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem partSPToolStripMenuItem;
@@ -1764,14 +1550,11 @@
         private System.Windows.Forms.ToolStripMenuItem rankByMultiToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem partFSToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem loadValidityMatrixToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem batchLoadTestToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem partialMatchingToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem fSAgentToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem testToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem refitaxisalignedToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem partGroupToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem clearPGsToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem lFDTestToolStripMenuItem;
         private System.Windows.Forms.TextBox outputTextWindow;
         private System.Windows.Forms.ToolStripMenuItem unGroupToolStripMenuItem;
         private System.Windows.Forms.ListBox categoryList;

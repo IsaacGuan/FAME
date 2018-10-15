@@ -799,8 +799,20 @@ namespace Component
             foreach (Model m in models)
             {
                 _parent_names.Add(m._model_name);
-                _original_names.AddRange(m._parent_names); // parents' parents' also become originals
-                _original_names.AddRange(m._original_names);
+                foreach (string name in m._parent_names) // parents' parents' also become originals
+                {
+                    if (!_original_names.Contains(name))
+                    {
+                        _original_names.Add(name);
+                    }
+                }
+                foreach (string name in m._original_names)
+                {
+                    if (!_original_names.Contains(name))
+                    {
+                        _original_names.Add(name);
+                    }
+                }
             }
         }// setParentNames
 

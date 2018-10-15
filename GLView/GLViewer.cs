@@ -29,6 +29,8 @@ namespace FameBase
             this.InitializeContexts();
 
             this.initScene();
+
+            this.initMatlab();
         }
 
         public void Init()
@@ -251,6 +253,8 @@ namespace FameBase
         // record the part combinations to avoid repetition
         Dictionary<string, int> partNameToInteger;
         List<PartFormation>[] partCombinationMemory;
+
+        private MLApp.MLApp matlab = new MLApp.MLApp();
 
         /******************** Functions ********************/
 
@@ -1303,6 +1307,13 @@ namespace FameBase
             }
         }// loadValidityMatrix
 
+        private void initMatlab()
+        {
+            string exeStr = "cd " + Interface.MATLAB_PATH;
+            this.matlab.Execute(exeStr);
+            this.matlab.Execute("allModels = loadAllRegressionModels()");
+        }
+
         public void savePointFeature()
         {
             if (_currModel == null || _currModel._GRAPH == null)
@@ -1312,13 +1323,8 @@ namespace FameBase
             Stopwatch stopWatch = new Stopwatch();
             stopWatch.Start();
 
-            // CALL MATLAB
-            // clear folder
-            MLApp.MLApp matlab = new MLApp.MLApp();
-            string exeStr = "cd " + Interface.MATLAB_PATH;
-            matlab.Execute(exeStr);
             Object matlabOutput = null;
-            matlab.Feval("clearData", 0, out matlabOutput);
+            this.matlab.Feval("clearData", 0, out matlabOutput);
 
             this.runFunctionalityTest(_currModel);
             //this.runFunctionalityTestWithPatchCombination(_currModel, 0);
@@ -1731,6 +1737,175 @@ namespace FameBase
             return representatives;
         }// LFD
 
+        double[,] partSimMat;
+        Dictionary<string, int> partNameMap;
+        private void computePartSimExternally(List<Model> models)
+        {
+            // compare the similarity between shapes to select a set of diverse shapes
+            string exe_path = @"..\..\external\LFD\";
+            string alighmentCmd = "3DAlignment.exe";
+            string lfdCmd = "GroundTruth.exe"; // Note in the .exe file, the number of model is fixed to 4
+            string prstCmdPara = "";
+            string listFile = exe_path + "list.txt";
+            string prefix = @"Parts\";
+            string part_path = exe_path + prefix;
+
+            if (!Directory.Exists(part_path))
+            {
+                Directory.CreateDirectory(part_path);
+            }
+
+            if (!File.Exists(alighmentCmd))
+            {
+                return;
+            }
+
+            // 1. write .obj file name to "list.txt"
+            // save each part group
+            List<Part> parts = new List<Part>();
+            foreach (Model m in models)
+            {
+                foreach (Part p in m._PARTS)
+                {
+                    parts.Add(p);
+                }
+            }
+            // collect meshes
+            int n = 0;
+            partNameMap = new Dictionary<string, int>();
+            foreach (Part p in parts)
+            {
+                string filename = part_path + "part_" + n.ToString() + ".obj";
+                partNameMap.Add(p._partName, n);
+                using (StreamWriter sw = new StreamWriter(filename))
+                {
+                    Mesh mesh = p._MESH;
+
+                    // vertex
+                    string s = "";
+                    for (int i = 0, j = 0; i < mesh.VertexCount; ++i)
+                    {
+                        s = "v";
+                        s += " " + mesh.VertexPos[j++].ToString();
+                        s += " " + mesh.VertexPos[j++].ToString();
+                        s += " " + mesh.VertexPos[j++].ToString();
+                        sw.WriteLine(s);
+                    }
+                    // face
+                    for (int i = 0, j = 0; i < mesh.FaceCount; ++i)
+                    {
+                        s = "f";
+                        s += " " + (mesh.FaceVertexIndex[j++] + 1).ToString();
+                        s += " " + (mesh.FaceVertexIndex[j++] + 1).ToString();
+                        s += " " + (mesh.FaceVertexIndex[j++] + 1).ToString();
+                        sw.WriteLine(s);
+                    }
+                }
+                ++n;
+            }
+
+            List<string> part_list = new List<string>();
+            using (StreamWriter sw = new StreamWriter(listFile))
+            {
+                int id = 0;
+                foreach (Part p in parts)
+                {
+                    string name = prefix + "part_" + id.ToString();
+                    sw.WriteLine(name);
+                    part_list.Add(name);
+                    ++id;
+                }
+            }
+
+            // for "ground_trutch.exe"
+            string result_dir = exe_path + "Results\\";
+            string compare_file = exe_path + "compare.txt";
+            if (!Directory.Exists(result_dir))
+            {
+                Directory.CreateDirectory(result_dir);
+            }
+            StreamWriter sw_compare = new StreamWriter(compare_file);
+            foreach (string cur in part_list)
+            {
+                sw_compare.WriteLine(cur);
+                StreamWriter sw_cur = new StreamWriter(exe_path + cur + ".txt");
+                sw_cur.WriteLine(cur);
+                sw_cur.Close();
+            }
+            sw_compare.Close();
+            using (StreamReader sr = new StreamReader(listFile))
+            {
+                while (sr.Peek() > 0)
+                {
+                    string s = sr.ReadLine().Trim();
+                    string res_dir = result_dir + s;
+                    if (!Directory.Exists(res_dir))
+                    {
+                        Directory.CreateDirectory(res_dir);
+                    }
+                }
+            }
+
+            // 2. call "3DAlignment.exe" for computing features
+
+            Process process = new Process();
+            ProcessStartInfo startInfo = new ProcessStartInfo();
+            startInfo.WorkingDirectory = exe_path;
+            startInfo.FileName = alighmentCmd;
+            startInfo.Arguments = prstCmdPara;
+            process.StartInfo = startInfo;
+            process.Start();
+            process.WaitForExit();
+
+            // 2. read model names from "list.txt" to compute the similarity of pairs of models using "GroundTruth.exe"
+
+            process = new Process();
+            startInfo = new ProcessStartInfo();
+            startInfo.WorkingDirectory = exe_path;
+            startInfo.FileName = lfdCmd;
+            startInfo.Arguments = parts.Count.ToString(); // prstCmdPara;
+            process.StartInfo = startInfo;
+            process.Start();
+            process.WaitForExit();
+
+            // read similarity
+            int count = parts.Count;
+            double[][] sims = new double[count][];
+            for (int i = 0; i < count; ++i)
+            {
+                sims[i] = new double[count];
+            }
+            string simDir = result_dir + "Parts\\";
+            double maxVal = 0;
+            for (int i = 0; i < count; ++i)
+            {
+                string simFile = simDir + "part_" + i.ToString() + "_sim.txt";
+                using (StreamReader sr = new StreamReader(simFile))
+                {
+                    char[] separator = { ' ' };
+                    while (sr.Peek() > 0)
+                    {
+                        string s = sr.ReadLine().Trim();
+                        string[] arr = s.Split(separator);
+                        string next = arr[0].Substring(arr[0].LastIndexOf('_') + 1);
+                        int nextid = Int32.Parse(next);
+                        sims[i][nextid] = double.Parse(arr[1]);
+                        maxVal = Math.Max(maxVal, sims[i][nextid]);
+                    }
+                }
+            }
+            partSimMat = new double[count, count];
+            for (int i = 0; i < count; ++i)
+            {
+                double[] cur = sims[i];
+                int[] keys = new int[count];
+                Array.Sort(cur, keys);
+                for (int j = 0; j < count; ++j)
+                {
+                    partSimMat[i, j] = (double)sims[i][j] / maxVal;
+                }
+            }
+        } // compute part similarity 
 
         private void computePGSimExternally(List<Model> models)
         {
@@ -1893,7 +2068,7 @@ namespace FameBase
                     }
                 }
             }
-            simMatrix = new double[count, count];
+            pgSimMatrix = new double[count, count];
             for (int i = 0; i < count; ++i)
             {
                 double maxVal = 0;
@@ -1906,10 +2081,70 @@ namespace FameBase
                 Array.Sort(cur, keys);
                 for (int j = 0; j < count; ++j)
                 {
-                    simMatrix[i, j] = (double)sims[i][j] / maxVal;
+                    pgSimMatrix[i, j] = (double)sims[i][j] / maxVal;
                 }
             }
         } // computePGsimilarityExternally
+
+        private void computePartGroupSimilarity(List<Model> models)
+        {
+            List<PartGroup> pgs = new List<PartGroup>();
+            foreach (Model m in models)
+            {
+                foreach (PartGroup pg in m._GRAPH._partGroups)
+                {
+                    if (pg._NODES.Count > 0)
+                    {
+                        pgs.Add(pg);
+                    }
+                }
+            }
+            // collect meshes
+            int n = 0;
+            pgSimMatrixMap = new Dictionary<PartGroup, int>();
+            foreach (PartGroup pg in pgs)
+            {
+                pgSimMatrixMap.Add(pg, n);
+            }
+            int count = pgs.Count;
+            pgSimMatrix = new double[count, count];
+            for (int i = 0; i < count - 1; ++i)
+            {
+                List<int> pg_i_ids = new List<int>();
+                foreach (Node node in pgs[i]._NODES)
+                {
+                    int idx = -1;
+                    partNameMap.TryGetValue(node._PART._partName, out idx);
+                    if (idx != -1)
+                    {
+                        pg_i_ids.Add(idx);
+                    }
+                }
+                for (int j = i + 1; j < count; ++j)
+                {
+                    int n_toCompare = 0;
+                    double diff = 0;
+                    foreach (Node node in pgs[j]._NODES)
+                    {
+                        int idx = -1;
+                        partNameMap.TryGetValue(node._PART._partName, out idx);
+                        if (idx != -1)
+                        {
+                            double minDiff = double.MaxValue;
+                            foreach (int i_idx in pg_i_ids)
+                            {
+                                minDiff = Math.Min(minDiff, partSimMat[i_idx, idx]);
+                            }
+                            diff += minDiff;
+                            ++n_toCompare;
+                        }
+                    }
+                    diff /= n_toCompare;
+                    pgSimMatrix[i, j] = diff;
+                    pgSimMatrix[j, i] = diff;
+                }
+            }
+        }// computePartGroupSimilarity
 
         public void computePGsimilarity()
         {
@@ -3113,8 +3348,8 @@ namespace FameBase
             this.analyzeBetaDistribution(scores, index);
         }// loadAllCategoryScores
 
-        BetaDistribution[] bd_inClass;
-        BetaDistribution[] bd_outClass;
+        BetaDistribution[] bd_inClass = new BetaDistribution[Functionality._NUM_CATEGORIY];
+        BetaDistribution[] bd_outClass = new BetaDistribution[Functionality._NUM_CATEGORIY];
 
         private double correctZeroProb(double prob)
         {
@@ -3225,6 +3460,7 @@ namespace FameBase
         private void loadTrainedFeautres()
         {
             string featureFolder = Interface.MODLES_PATH + "patchFeature\\";
+            string weightFolder = Interface.MODLES_PATH + "featureWeight\\";
             _trainingFeaturesPerCategory = new List<TrainedFeaturePerCategory>();
             for (int c = 0; c < Functionality._NUM_CATEGORIY; ++c)
             {
@@ -3264,7 +3500,7 @@ namespace FameBase
                     }
                 }
                 // feature weights
-                string featureFileName = folder + catName + "_weight_optimal.csv";
+                string featureFileName = weightFolder + catName + "_weight_optimal.csv";
                 tf.weights = loadFeatureWeights(featureFileName);
                 _trainingFeaturesPerCategory.Add(tf);
             }
@@ -5498,7 +5734,7 @@ namespace FameBase
                 // add by cluster
                 foreach (List<Node> cluster in pg2._clusters)
                 {
-                    List<Node> newNodes = this.insertionOperation(newModel, m2, cluster);
+                    List<Node> newNodes = this.insertionOperation(newModel, m2, cluster, false);
                     updatedNodes2.AddRange(newNodes);
                 }
                 newModel.replaceNodes(nodes1, updatedNodes2);
@@ -5588,7 +5824,7 @@ namespace FameBase
             return newModel;
         }// deletionOperation
 
-        private List<Node> insertionOperation(Model growModel, Model m2, List<Node> insertNodes2)
+        private List<Node> insertionOperation(Model growModel, Model m2, List<Node> insertNodes2, bool front)
         {
             // insert #insertNodes to the growth model #m1
             List<Node> insertNodes = cloneNodesAndRelations(insertNodes2);
@@ -5629,11 +5865,18 @@ namespace FameBase
                     }
                 }
             }
+            //if (toConnect == null)
+            //{
+            //    // use the main functional node
+            //    // find similar struture from its source model
+            //    toConnect = mainNode;
+            //}
+            if (mainNode != null) {
+                toConnect = mainNode;
+            }
             if (toConnect == null)
             {
-                // use the main functional node
-                // find similar struture from its source model
-                toConnect = mainNode;
+                return null;
             }
 
             Vector3d maxCoordInConn = Vector3d.MinCoord;
@@ -5675,6 +5918,20 @@ namespace FameBase
             {
                 g1.addAnEdge(e._start, e._end, e._contacts);
             }
+            int ncontacts = 0;
+            foreach (Edge e in edgesToConnect)
+            {
+                ncontacts += e._contacts.Count;
+            }
+            Vector3d vcenter = new Vector3d(vmin);
+            if (front)
+            {
+                vcenter.z = vmin.z + (vmax.z - vmin.z) * 0.9;
+            }
+
+            //
+            Vector3d maxCoordInSrc = Vector3d.MinCoord;
+            Vector3d minCoordInSrc = Vector3d.MaxCoord;
             foreach (Edge e in edgesToConnect)
             {
                 Node toInsert = insertNodes.Contains(e._start) ? e._start : e._end;
@@ -5682,14 +5939,26 @@ namespace FameBase
                 // local xyz
                 Vector3d v1 = nodeInContact._PART._BOUNDINGBOX.MinCoord;
                 Vector3d v2 = nodeInContact._PART._BOUNDINGBOX.MaxCoord;
+                maxCoordInSrc = Vector3d.Max(maxCoordInSrc, v2);
+                minCoordInSrc = Vector3d.Min(minCoordInSrc, v1);
+            }
+            foreach (Edge e in edgesToConnect)
+            {
+                Node toInsert = insertNodes.Contains(e._start) ? e._start : e._end;
+                Node nodeInContact = e._start == toInsert ? e._end : e._start;
                 List<Contact> newContacts = new List<Contact>();
                 foreach (Contact c in e._contacts)
                 {
                     Vector3d v = c._pos3d;
                     center1 += v;
                     // try to find correspondence in target
-                    Vector3d s1 = (v - v1) / (v2 - v1);
-                    Vector3d s2 = vmin + s1 * (vmax - vmin);
+                    Vector3d s1 = (v - minCoordInSrc) / (maxCoordInSrc - minCoordInSrc);
+                    //s1 = new Vector3d(1 - s1[0], 1-s1[1], 1 - s1[2]);
+                    //if (ncontacts == 2)
+                    //{
+                    //    s1.y = 0;
+                    //}
+                    Vector3d s2 = vcenter + s1 * (vmax - vmin);
                     sources.Add(v);
                     targets.Add(s2);
                     newContacts.Add(new Contact(s2));
@@ -6935,7 +7204,7 @@ namespace FameBase
 
             if (funcFolder == null)
             {
-                funcFolder = @"E:\Projects\fame\data_sets\patch_data\models\funcTest\" + model._model_name + "\\";
+                funcFolder = System.IO.Path.GetFullPath(@"..\..\data_sets\patch_data\models\funcTest\" + model._model_name + "\\");
             } 
 
             //List<string> patchFileNames = this.useSelectedSubsetPatchesForPrediction(model);
@@ -7085,15 +7354,12 @@ namespace FameBase
 
             this.writeModelSampleFeatureFilesForPrediction(model);
 
-            MLApp.MLApp matlab = new MLApp.MLApp();
-            string exeStr = "cd " + Interface.MATLAB_PATH;
             Object matlabOutput = null;
-            matlab.Execute(exeStr);
-            matlab.Feval("clearData", 0, out matlabOutput);
+            this.matlab.Feval("clearData", 0, out matlabOutput);
             // MATLAB array
             //matlab.Execute("a = [1 2 3 4 5 6 7 8]");
             matlabOutput = null;
-            matlab.Feval("getSingleModelFunctionalityScore", 1, out matlabOutput, model._model_name);
+            this.matlab.Feval("getSingleModelFunctionalityScore", 1, out matlabOutput, model._model_name);
             Object[] res = matlabOutput as Object[];
             double[,] results = res[0] as double[,];
             // save the scores
@@ -7990,7 +8256,7 @@ namespace FameBase
             {
                 return;
             }
-            string imageFolder = @"F:\Projects\fame\data_sets\patch_data\models\Users\User_1\screenCapture\test_split\";
+            string imageFolder = System.IO.Path.GetFullPath(@"..\..\data_sets\patch_data\models\Users\User_1\screenCapture\test_split\");
             string splitFolder = imageFolder;
             if (_currModel._GRAPH._functionalityValues != null)
             {
@@ -8567,6 +8833,10 @@ namespace FameBase
             int id = 0;
             foreach (Functionality.Category c in m._GRAPH._functionalityValues._parentCategories)
             {
+                if (c == Functionality.Category.None)
+                {
+                    continue;
+                }
                 int cid = (int)c;
                 if (res[cid, 1] >= 0.9)
                 {
@@ -9949,6 +10219,8 @@ namespace FameBase
                 }
                 // if the last point is added ground point, remove it from scaling calculation to avoid error
                 // e.g., the distance from this point to the center is 0 in two axes, meaning the two scaling axes will contribute 0
+                double maxy = double.MinValue;
+                double miny = double.MaxValue;
                 for (int i = 0; i < k; ++i)
                 {
                     Vector3d p1 = srcpts[i] - t1;
@@ -9956,6 +10228,8 @@ namespace FameBase
                     sx += p2.x / p1.x;
                     sy += p2.y / p1.y;
                     sz += p2.z / p1.z;
+                    maxy = Math.Max(maxy, srcpts[i].y);
+                    miny = Math.Min(miny, srcpts[i].y);
                 }
                 sx /= k;
                 sy /= k;
@@ -9986,6 +10260,10 @@ namespace FameBase
 
                 Vector3d scale = new Vector3d(sx, sy, sz);
                 scale = adjustScale(scale);
+                if (maxy - miny < 0.05) // contact points on the a plane, preserve z-scale
+                {
+                    scale[1] = (scale[0] + scale[2]) / 2;
+                }
                 //if (double.IsNaN(scale.x) || double.IsNaN(trans.x)) throw new Exception();
 
                 S = Matrix4d.ScalingMatrix(scale.x, scale.y, scale.z);
@@ -10874,15 +11152,18 @@ namespace FameBase
 
         bool useSimFilter = false;
         Dictionary<PartGroup, int> pgSimMatrixMap;
-        double[,] simMatrix;
+        double[,] pgSimMatrix;
 
         public void autoRunTest()
         {
-            int maxIter = 10;
-            crossedPairNames = new HashSet<string>();
-            autoRunTestWithOrWithoutFilter(true, maxIter);
-            registerANewUser();
-            _currGenId = 1;
+            // compute part similarity
+            //computePartSimExternally(_ancesterModels);
+
+            int maxIter = 1;
+            //crossedPairNames = new HashSet<string>();
+            //autoRunTestWithOrWithoutFilter(true, maxIter);
+            //registerANewUser();
+            //_currGenId = 1;
             crossedPairNames = new HashSet<string>();
             autoRunTestWithOrWithoutFilter(false, maxIter);
             crossedPairNames = new HashSet<string>();
@@ -10897,6 +11178,7 @@ namespace FameBase
             int nTotalModels = 0;
             while (iter <= maxIter)
             {
+                Console.WriteLine("\nIteration " + iter + ": ");
                 runByUserSelection();
                 if (_currGenModelViewers == null || _currGenModelViewers.Count == 0)
                 {
@@ -10975,8 +11257,12 @@ namespace FameBase
             List<Model> candidates = new List<Model>();
             if (useSimFilter)
             {
-                computePGSimExternally(targetMoels);
+                computePartGroupSimilarity(targetMoels);
+                //computePGSimExternally(targetMoels);
             }
+
+            this.loadTrainedInfo();
+
             Dictionary<string, int[]> nameMap = new Dictionary<string, int[]>();
             foreach (Model m1 in targetMoels)
             {
@@ -11003,7 +11289,7 @@ namespace FameBase
                     }
                     string c1 = m1._model_name + m2._model_name;
                     string c2 = m2._model_name + m1._model_name;
-                    if (crossedPairNames.Contains(c1) || crossedPairNames.Contains(c2))
+                    if (crossedPairNames.Contains(c1))// || crossedPairNames.Contains(c2))
                     {
                         continue;
                     }
@@ -11013,6 +11299,32 @@ namespace FameBase
                         m2._GRAPH._partGroups.Add(new PartGroup(m2._GRAPH._NODES, 0));
                     }
                     List<Model> res = this.tryCrossOverTwoModelsWithFunctionalConstraints(m1, m2, idx);
+                    foreach (Model m in res)
+                    {
+                        double[,] scores_probs = partialMatching(m, true);
+                        double[,] categories_cores_probs = new double[Functionality._NUM_CATEGORIY, 5];
+                        Console.WriteLine(m._model_name + " partial matching scores and probs: ");
+                        for (int i = 0; i < Functionality._NUM_CATEGORIY; ++i)
+                        {
+                            categories_cores_probs[i, 0] = i;
+                            categories_cores_probs[i, 1] = scores_probs[i, 0];
+                            categories_cores_probs[i, 2] = scores_probs[i, 1];
+                            categories_cores_probs[i, 3] = scores_probs[i, 2];
+                            categories_cores_probs[i, 4] = scores_probs[i, 3];
+                        }
+                        categories_cores_probs = categories_cores_probs.OrderByDescending(x => x[4]);
+                        for (int i = 0; i < Functionality._NUM_CATEGORIY; ++i)
+                        {
+                            Console.WriteLine(i+1 + ". " + Functionality.getCategoryName((int)categories_cores_probs[i, 0]) + ": "
+                                + categories_cores_probs[i, 1] + ", "
+                                + categories_cores_probs[i, 2] + ", "
+                                + categories_cores_probs[i, 3] + ", "
+                                + categories_cores_probs[i, 4]);
+                        }
+                        m._CAT = Functionality.getCategory(Functionality.getCategoryName((int)categories_cores_probs[0, 0]));
+                        string scoreDir = m._path + "\\" + m._model_name + "\\" + m._model_name + ".score";
+                        saveScoreFile(scoreDir, Enumerable.Range(0, scores_probs.GetLength(0)).Select(x => scores_probs[x, 3]).ToArray());
+                    }
                     candidates.AddRange(res);
                     Console.WriteLine("The number of candidates: " + candidates.Count.ToString());
                     int pgid = m2._GRAPH._partGroups.Count - 1;
@@ -11054,7 +11366,7 @@ namespace FameBase
         private List<Model> tryCrossOverTwoModelsWithFunctionalConstraints(Model m1, Model m2, int[] idx)
         {
             List<Model> res = new List<Model>();
-            // 
+            // user selected functions
             var sub = _currUserFunctions.Except(m1._GRAPH.collectAllDistinceFunctions());
             List<Functionality.Functions> lackedFuncs = sub.ToList();
             // degenerate to part replacement
@@ -11078,12 +11390,50 @@ namespace FameBase
                             int id2 = -1;
                             double thr = 0.99;
                             pgSimMatrixMap.TryGetValue(pgs_2[j], out id2);
-                            if (id1 != -1 && id2 != -1 && simMatrix[id1, id2] > thr && simMatrix[id2, id1] > thr)
+                            if (id1 != -1 && id2 != -1 && pgSimMatrix[id1, id2] > thr && pgSimMatrix[id2, id1] > thr)
                             {
                                 continue;
                             }
                         }
                         List<Functionality.Functions> funcs2 = Functionality.getNodesFunctionalities(pgs_2[j]._NODES);
+                        //if (m1._model_name.StartsWith("swing") && funcs1.Count == 0 && funcs2.Count > 0 && funcs2.Contains(Functionality.Functions.HAND_HOLD))
+                        if (funcs1.Count == 0 && funcs2.Count > 0 && _currGenId < 3 &&
+                            (Functionality.ContainsMainFunction(funcs2) || Functionality.ContainsSecondaryFunction(funcs2)))
+                            
+                        {
+                            // special case for comparison to TVCG paper
+                            Model mCloned = m1.Clone() as Model;
+                            mCloned._path = crossoverFolder + "gen_" +_currGenId.ToString() + "\\";
+                            if (!Directory.Exists(mCloned._path))
+                            {
+                                Directory.CreateDirectory(mCloned._path);
+                            }
+                            mCloned._model_name = m1._model_name + "-gen_" + _currGenId.ToString() + "_num_" + idx[0].ToString();
+                            List<Node> newNodes = insertionOperation(mCloned, m2, pgs_2[j]._NODES, funcs2.Contains(Functionality.Functions.HAND_HOLD));
+                            if (newNodes == null)
+                            {
+                                continue;
+                            }
+                            mCloned.replaceNodes(new List<Node>(), newNodes);
+                            // topology
+                            //mCloned._GRAPH.replaceNodes(new List<Node>(), newNodes);
+                            PartFormation pf = this.tryCreateANewPartFormation(mCloned._PARTS, 0);
+                            if (pf != null)
+                            {
+                                if (this.processAnOffspringModel(mCloned))
+                                {
+                                    pf._RATE = 1.0;
+                                    mCloned._partForm = pf;
+                                    mCloned._GRAPH._functionalityValues = new FunctionalityFeatures();
+                                    mCloned._GRAPH._functionalityValues.addParentCategories(new List<Functionality.Category> { m1._CAT, m2._CAT });
+                                    mCloned._GRAPH._functionalityValues.addParentCategories(m1._GRAPH._functionalityValues._parentCategories);
+                                    mCloned._GRAPH._functionalityValues.addParentCategories(m2._GRAPH._functionalityValues._parentCategories);
+                                    res.Add(mCloned);
+                                    ++idx[0];
+                                }
+                            }
+                            continue;
+                        }
                         if (!Functionality.hasCompatibleFunctions(funcs1, funcs2) 
                             || Functionality.isTrivialReplace(pgs_1[i]._NODES, pgs_2[j]._NODES))
                         {
@@ -11098,6 +11448,10 @@ namespace FameBase
                         ++idx[0];
                         if (m1_cloned != null)
                         {
+                            m1_cloned._GRAPH._functionalityValues = new FunctionalityFeatures();
+                            m1_cloned._GRAPH._functionalityValues.addParentCategories(new List<Functionality.Category> { m1._CAT, m2._CAT });
+                            m1_cloned._GRAPH._functionalityValues.addParentCategories(m1._GRAPH._functionalityValues._parentCategories);
+                            m1_cloned._GRAPH._functionalityValues.addParentCategories(m2._GRAPH._functionalityValues._parentCategories);
                             res.Add(m1_cloned);
                         }
                     }
@@ -11201,6 +11555,10 @@ namespace FameBase
                         if (isValid)
                         {
                             mCloned._partForm = pf;
+                            mCloned._GRAPH._functionalityValues = new FunctionalityFeatures();
+                            mCloned._GRAPH._functionalityValues.addParentCategories(new List<Functionality.Category> { m1._CAT, m2._CAT });
+                            mCloned._GRAPH._functionalityValues.addParentCategories(m1._GRAPH._functionalityValues._parentCategories);
+                            mCloned._GRAPH._functionalityValues.addParentCategories(m2._GRAPH._functionalityValues._parentCategories);
                             res.Add(mCloned);
                             currLevels.Add(mCloned);
                         }
@@ -11501,7 +11859,13 @@ namespace FameBase
             }
             else
             {
-                if (center1.x > center_t.x)
+                if (center1.x > center_t.x && center1.z > center_t.z) {
+                    // middle
+                    Vector3d tv = new Vector3d((mint.x + maxt.x) / 2, 0, (maxt.z + mint.z) / 2);
+                    Q = Matrix4d.TranslationMatrix(tv) * Matrix4d.ScalingMatrix(scale1[2], 1, scale1[2]) *
+                        Matrix4d.TranslationMatrix(new Vector3d() - new Vector3d((minv_s.x + maxv_s.x) / 2, 0, (minv_s.z + maxv_s.z) / 2));
+                }
+                else if (center1.x > center_t.x )
                 {
                     // right
                     Vector3d tv = new Vector3d(mint.x, 0, (maxt.z + mint.z) / 2);

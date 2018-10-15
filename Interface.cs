@@ -24,15 +24,15 @@ namespace FameBase
 
         /*********Var**********/
         // test paths
-        public static string MODLES_PATH = @"E:\Projects\fame\data_sets\shapes\set_2\";
-        public static string PATCH_PATH = @"E:\Projects\fame\data_sets\patch_data\";
-        public static string MATLAB_PATH = @"E:\Projects\fame\externalCLR\code_for_prediction_only\";
-        public static string MATLAB_INPUT_PATH = @"E:\Projects\fame\externalCLR\code_for_prediction_only\test\input\";
+        public static string MODLES_PATH = System.IO.Path.GetFullPath(@"..\..\data\");
+        public static string PATCH_PATH = System.IO.Path.GetFullPath(@"..\..\data_sets\patch_data\");
+        public static string MATLAB_PATH = System.IO.Path.GetFullPath(@"..\..\..\PartialMatching\matlab_codes\");
+        public static string MATLAB_INPUT_PATH = System.IO.Path.GetFullPath(@"..\..\..\PartialMatching\matlab_codes\test\input\");
         // FOR showing predicted results
-        public static string MESH_PATH = @"E:\Projects\fame\data_sets\patch_data\meshes\";
-        public static string POINT_SAMPLE_PATH = @"E:\Projects\fame\data_sets\patch_data\samples\";
-        public static string POINT_FEATURE_PATH = @"E:\Projects\fame\data_sets\patch_data\point_feature\";
-        public static string WEIGHT_PATH = @"E:\Projects\fame\data_sets\patch_data\weights\";
+        public static string MESH_PATH = System.IO.Path.GetFullPath(@"..\..\data_sets\patch_data\meshes\");
+        public static string POINT_SAMPLE_PATH = System.IO.Path.GetFullPath(@"..\..\data_sets\patch_data\samples\");
+        public static string POINT_FEATURE_PATH = System.IO.Path.GetFullPath(@"..\..\data_sets\patch_data\point_feature\");
+        public static string WEIGHT_PATH = System.IO.Path.GetFullPath(@"..\..\data_sets\patch_data\weights\");
 
         //public static string MODLES_PATH = @"C:\scratch\HLiu\fame\data_sets\shapes\set_1\";
         //public static string PATCH_PATH = @"C:\scratch\HLiu\fame\data_sets\patch_data\";
@@ -421,12 +421,6 @@ namespace FameBase
             }
         }
 
-        private void unitifyToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            this.unitifyToolStripMenuItem.Checked = !this.unitifyToolStripMenuItem.Checked;
-            this.glViewer._unitifyMesh = this.unitifyToolStripMenuItem.Checked;
-        }
-
         private void axesToolStripMenuItem_Click(object sender, EventArgs e)
         {
             this.axesToolStripMenuItem.Checked = !this.axesToolStripMenuItem.Checked;
@@ -533,11 +527,6 @@ namespace FameBase
             this.glViewer.composeSelectedParts();
         }
 
-        private void translucentPoseToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            this.translucentPoseToolStripMenuItem.Checked = !this.translucentPoseToolStripMenuItem.Checked;
-            this.glViewer.setShowHumanPoseOption(this.translucentPoseToolStripMenuItem.Checked);
-        }
 
         private void XYbutton_Click(object sender, EventArgs e)
         {
@@ -696,7 +685,7 @@ namespace FameBase
 
         private void autoSnapshotsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var dialog = new FolderBrowserDialog() { SelectedPath = @"E:\Projects\fame\data_sets\patch_data\models\results\User8\User8_highest" };
+            var dialog = new FolderBrowserDialog() { SelectedPath = System.IO.Path.GetFullPath(@"..\..\data_sets\patch_data\models\results\") };
             if (dialog.ShowDialog(this) == DialogResult.OK)
             {
                 string folderName = dialog.SelectedPath;
@@ -718,7 +707,7 @@ namespace FameBase
 
         private void importShapeNetToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var dialog = new FolderBrowserDialog() { SelectedPath = @"C:\scratch\HLiu\Fame\data_sets\shapenetcore_partanno_v0\Airplane" };
+            var dialog = new FolderBrowserDialog() { SelectedPath = System.IO.Path.GetFullPath(@"..\..\data_sets\shapenetcore_partanno_v0\") };
             if (dialog.ShowDialog(this) == DialogResult.OK)
             {
                 string folderName = dialog.SelectedPath;
@@ -742,7 +731,7 @@ namespace FameBase
 
         private void loadFunctionlityModelToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var dialog = new FolderBrowserDialog() { SelectedPath = @"C:\scratch\HLiu\Fame\data_sets\shapenetcore_partanno_v0\Airplane" };
+            var dialog = new FolderBrowserDialog() { SelectedPath = System.IO.Path.GetFullPath(@"..\..\data_sets\shapenetcore_partanno_v0\") };
             if (dialog.ShowDialog(this) == System.Windows.Forms.DialogResult.OK)
             {
                 string foldername = dialog.SelectedPath;
@@ -1024,7 +1013,7 @@ namespace FameBase
         private void batchLoadTestToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var dialog = new FolderBrowserDialog() {
-                SelectedPath = @"F:\Projects\fame\data_sets\patch_data\models\Users\User_1_Set_1_Jan\models\crossover\gen_1\"
+                SelectedPath = System.IO.Path.GetFullPath(@"..\..\data_sets\patch_data\models\")
             };
             if (dialog.ShowDialog(this) == DialogResult.OK)
             {
@@ -1044,11 +1033,6 @@ namespace FameBase
             this.fSAgentToolStripMenuItem.Checked = !this.fSAgentToolStripMenuItem.Checked;
             this.glViewer.isDrawFunctionalSpaceAgent = this.fSAgentToolStripMenuItem.Checked;
             this.glViewer.Refresh();
-        }
-
-        private void testToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            this.glViewer.test();
         }
 
         private void refitaxisalignedToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1165,6 +1149,7 @@ namespace FameBase
             this.placement.Checked = false;
             this.storage.Checked = false;
             this.rolling.Checked = false;
+            this.rocking.Checked = false;
         }
 
         public void setCheckBox(string str)
@@ -1182,6 +1167,9 @@ namespace FameBase
                     break;
                 case "rolling":
                     this.rolling.Checked = true;
+                    break;
+                case "rocking":
+                    this.rocking.Checked = true;
                     break;
                 default:
                     break;

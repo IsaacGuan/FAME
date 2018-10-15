@@ -1595,7 +1595,7 @@ namespace Component
                     {
                         ++nTitled;
                     }
-                    Console.WriteLine("functional part angle: " + angle.ToString());
+                    //Console.WriteLine("functional part angle: " + angle.ToString());
                 }
             }
             if (nTitled > nMaxTitled)

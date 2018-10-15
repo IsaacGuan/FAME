@@ -15,7 +15,7 @@ namespace Component
         /********** Variables **********/
         public static int _TOTAL_FUNCTONAL_PATCHES = 35; // ncat * npatch
         public static int _NUM_FUNCTIONALITY = 6;
-        public static int _NUM_CATEGORIY = 16;
+        public static int _NUM_CATEGORIY = 15;
         public static int _NUM_UNARY_FEATURE = 420;
         public static int _NUM_BINARY_FEATURE = 110;
         public static int[] _PAIR_INDEX_1 = { 0 }; // 1 functional patch
@@ -40,7 +40,7 @@ namespace Component
 
         public enum Functions { PLACEMENT, STORAGE, SITTING, HUMAN_BACK, HAND_HOLD, GROUND_TOUCHING, SUPPORT, HANG, ROLLING, ROCKING, NONE };
 
-        public enum Category { Backpack, Basket, Bicycle, Chair, Desk, DryingRack, Handcart, Hanger, Hook, Robot, Shelf, 
+        public enum Category { Backpack, Basket, Bicycle, Chair, Desk, DryingRack, Handcart, Hanger, Hook, Shelf, 
             Stand, Stroller, Table, TVBench, Vase, None };
 
 
@@ -113,6 +113,18 @@ namespace Component
             }
             return false;
         }// ContainsMainFunction
+
+        public static bool ContainsSecondaryFunction(List<Functions> funcs)
+        {
+            foreach (Functions f in funcs)
+            {
+                if (IsSecondaryFunction(f))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }// ContainsSecondaryFunction
 
         public static double[] GetPartGroupCompatibility(Model m1, Model m2, PartGroup pg1, PartGroup pg2)
         {
@@ -331,18 +343,16 @@ namespace Component
                 case 8:
                     return "Hook";
                 case 9:
-                    return "Robot";
-                case 10:
                     return "Shelf";
-                case 11:
+                case 10:
                     return "Stand";
-                case 12:
+                case 11:
                     return "Stroller";
-                case 13:
+                case 12:
                     return "Table";
-                case 14:
+                case 13:
                     return "TVBench";
-                case 15:
+                case 14:
                     return "Vase";
                 default:
                     return "None";
@@ -372,8 +382,6 @@ namespace Component
                     return Category.Hanger;
                 case "hook":
                     return Category.Hook;
-                case "robot":
-                    return Category.Robot;
                 case "shelf":
                     return Category.Shelf;
                 case "stand":
@@ -465,8 +473,6 @@ namespace Component
                     return 2;
                 case Category.Hook:
                     return 2;
-                case Category.Robot:
-                    return 3;
                 case Category.Shelf:
                     return 3;
                 case Category.Stand:
@@ -530,11 +536,6 @@ namespace Component
                 funcs.Add(Functions.HANG);
                 funcs.Add(Functions.GROUND_TOUCHING);
             }
-            if (cat == Category.Robot)
-            {
-                funcs.Add(Functions.PLACEMENT);
-                funcs.Add(Functions.GROUND_TOUCHING);
-            }
             if (cat == Category.Stand)
             {
                 funcs.Add(Functions.GROUND_TOUCHING);
@@ -545,10 +546,6 @@ namespace Component
                 funcs.Add(Functions.GROUND_TOUCHING);
                 funcs.Add(Functions.PLACEMENT);
                 funcs.Add(Functions.HUMAN_BACK);
-            }
-            if (cat == Category.Robot)
-            {
-                funcs.Add(Functions.GROUND_TOUCHING);
             }
             return funcs;
         }// getFunctionalityFromCategory
