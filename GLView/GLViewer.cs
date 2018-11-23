@@ -8804,16 +8804,17 @@ namespace FameBase
             double[,] res = new double[Functionality._NUM_CATEGORIY, 4]; // score + 3 prob
             Graph g = m._GRAPH;
             int nNodes = g._NNodes;
-            bool[] useNodes;
-            List<int> indices = new List<int>();
-            List<List<int>> excludedNodeIndices = new List<List<int>>();
-            excludedNodeIndices.Add(indices);
+            //bool[] useNodes;
+            List<int> allIndices = new List<int>();
+            //List<int> indices = new List<int>();
+            //List<List<int>> excludedNodeIndices = new List<List<int>>();
+            //excludedNodeIndices.Add(indices);
             // all
-            useNodes = new bool[nNodes];
-            for (int i = 0; i < nNodes; ++i)
-            {
-                useNodes[i] = true;
-            }
+            //useNodes = new bool[nNodes];
+            //for (int i = 0; i < nNodes; ++i)
+            //{
+            //    useNodes[i] = true;
+            //}
             //pointsFeatures = this.computePointFeatures(m);
             double[] scores = this.runFunctionalityTest(m);
             double[] probs;
@@ -8829,65 +8830,108 @@ namespace FameBase
             {
                 return res;
             }
-            // considering parent categories
             int id = 0;
-            foreach (Functionality.Category c in m._GRAPH._functionalityValues._parentCategories)
+            for (int i = 0; i < nNodes; ++i)
             {
-                if (c == Functionality.Category.None)
-                {
-                    continue;
-                }
-                int cid = (int)c;
-                if (res[cid, 1] >= 0.9)
-                {
-                    continue;
-                }
-                useNodes = new bool[nNodes];
-                indices = new List<int>();
-                for (int i = 0; i < nNodes; ++i)
-                {
-                    if (g._NODES[i]._PART._orignCategory == c)
-                    {
-                        useNodes[i] = true;
-                    } else
-                    {
-                        indices.Add(i);
-                    }
-                }
-                if (indices.Count == m._PARTS.Count || indices.Count == 0)
+                allIndices.Add(i);
+            }
+            foreach (var subset in allIndices.PowerSets())
+            {
+                if (subset.ToList().Count == m._PARTS.Count || subset.ToList().Count == 0)
                 {
                     continue;
                 }
                 Model mc = m.Clone() as Model;
-                // delete nodes
-                mc._GRAPH.deleteNodes(indices);
+                mc._GRAPH.deleteNodes(subset.ToList());
+                if (!mc._GRAPH.isValid())
+                {
+                    continue;
+                }
                 mc._model_name += "_" + id.ToString();
-                mc.deleteParts(indices);
+                mc.deleteParts(subset.ToList());
                 mc.unify();
                 mc.composeMesh();
                 this.saveAPartBasedModel(mc, mc._path + mc._model_name + ".pam", true);
-                // check functional space
-                // but not easy to check, since some other parts may serve the functionality
-                // e.g., chair seat is replaced by shelves, we don't know which fs to evaluate
-                bool hasFunctionalSpace = mc._GRAPH.hasAnyNonObstructedFunctionalPart(-1);
-                if (!hasFunctionalSpace)
-                {
-                    res[cid, 0] = 0;
-                    res[cid, 1] = 0;
-                    res[cid, 2] = 0;
-                    res[cid, 3] = 0;
-                    continue;
-                }
                 scores = this.runFunctionalityTest(mc);
-                probs = this.getProbabilityForACat(cid, scores[cid]);
-                if (probs[0] > res[cid, 1])
+                // considering parent categories
+                foreach (Functionality.Category c in m._GRAPH._functionalityValues._parentCategories)
                 {
-                    res[cid, 0] = scores[cid];
-                    res[cid, 1] = probs[0];
-                    res[cid, 2] = probs[1];
-                    res[cid, 3] = probs[2];
-                }
-            }// per cat
+                    if (c == Functionality.Category.None)
+                    {
+                        continue;
+                    }
+                    int cid = (int)c;
+                    if (res[cid, 1] >= 0.9)
+                    {
+                        continue;
+                    }
+                    probs = this.getProbabilityForACat(cid, scores[cid]);
+                    if (probs[0] > res[cid, 1])
+                    {
+                        res[cid, 0] = scores[cid];
+                        res[cid, 1] = probs[0];
+                        res[cid, 2] = probs[1];
+                        res[cid, 3] = probs[2];
+                    }
+                }// per cat
+                id++;
+            }
+            // considering parent categories
+            //foreach (Functionality.Category c in m._GRAPH._functionalityValues._parentCategories)
+            //{
+            //    if (c == Functionality.Category.None)
+            //    {
+            //        continue;
+            //    }
+            //    int cid = (int)c;
+            //    if (res[cid, 1] >= 0.9)
+            //    {
+            //        continue;
+            //    }
+            //    for (int i = 0; i < nNodes; ++i)
+            //    {
+            //        if (g._NODES[i]._PART._orignCategory == c)
+            //        {
+            //            useNodes[i] = true;
+            //        } else
+            //        {
+            //            indices.Add(i);
+            //        }
+            //    }
+            //    if (indices.Count == m._PARTS.Count || indices.Count == 0)
+            //    {
+            //        continue;
+            //    }
+            //    Model mc = m.Clone() as Model;
+            //    // delete nodes
+            //    mc._GRAPH.deleteNodes(indices);
+            //    mc._model_name += "_" + id.ToString();
+            //    mc.deleteParts(indices);
+            //    mc.unify();
+            //    mc.composeMesh();
+            //    this.saveAPartBasedModel(mc, mc._path + mc._model_name + ".pam", true);
+            //    // check functional space
+            //    // but not easy to check, since some other parts may serve the functionality
+            //    // e.g., chair seat is replaced by shelves, we don't know which fs to evaluate
+            //    bool hasFunctionalSpace = mc._GRAPH.hasAnyNonObstructedFunctionalPart(-1);
+            //    if (!hasFunctionalSpace)
+            //    {
+            //        res[cid, 0] = 0;
+            //        res[cid, 1] = 0;
+            //        res[cid, 2] = 0;
+            //        res[cid, 3] = 0;
+            //        continue;
+            //    }
+            //    scores = this.runFunctionalityTest(mc);
+            //    probs = this.getProbabilityForACat(cid, scores[cid]);
+            //    if (probs[0] > res[cid, 1])
+            //    {
+            //        res[cid, 0] = scores[cid];
+            //        res[cid, 1] = probs[0];
+            //        res[cid, 2] = probs[1];
+            //        res[cid, 3] = probs[2];
+            //    }
+            //}// per cat
             return res;
         }// partialMatching
 
