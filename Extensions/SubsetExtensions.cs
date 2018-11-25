@@ -29,5 +29,12 @@ namespace FameBase
                 n = n >> 1;
             }
         }
+
+        public static IEnumerable<IEnumerable<T>> SubSets<T>(this IEnumerable<T> elements, int k)
+        {
+            return k == 0 ? new[] { new T[0] } :
+              elements.SelectMany((e, i) =>
+                elements.Skip(i + 1).SubSets(k - 1).Select(c => (new[] { e }).Concat(c)));
+        }
     }
 }

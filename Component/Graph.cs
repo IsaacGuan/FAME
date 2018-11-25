@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 using Geometry;
 
@@ -1607,16 +1608,23 @@ namespace Component
                 _centerOfMass = new Vector3d();
             List<Vector2d> centers2d = new List<Vector2d>();
             List<Vector3d> groundPnts = new List<Vector3d>();
+            List<Vector3d> allVetices = new List<Vector3d>();
+            foreach (Node node in _nodes)
+            {
+                allVetices.AddRange(new List<Vector3d>(node._PART._MESH.VertexVectorArray));
+            }
+            double ground = allVetices.Min(x => x.y);
+            groundPnts = allVetices.Where(x => x.y < (ground + 0.01)).ToList();
             foreach (Node node in _nodes)
             {
                 Vector3d v = node._PART._BOUNDINGBOX.CENTER;
                 _centerOfMass += v;
-                centers2d.Add(new Vector2d(v.x, v.z));
-                if (node._funcs.Contains(Functionality.Functions.GROUND_TOUCHING))
-                {
-                    groundPnts.Add(node._PART._BOUNDINGBOX.MinCoord);
-                    groundPnts.Add(node._PART._BOUNDINGBOX.MaxCoord);
-                }
+                //centers2d.Add(new Vector2d(v.x, v.z));
+                //if (node._funcs.Contains(Functionality.Functions.GROUND_TOUCHING))
+                //{
+                //    groundPnts.Add(node._PART._BOUNDINGBOX.MinCoord);
+                //    groundPnts.Add(node._PART._BOUNDINGBOX.MaxCoord);
+                //}
             }
             _centerOfMass /= _NNodes;
             Vector2d center = new Vector2d(_centerOfMass.x, _centerOfMass.z);

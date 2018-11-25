@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Linq;
+using System.Numerics;
 
 using System.Windows.Forms;
 using System.IO;
@@ -8835,47 +8836,143 @@ namespace FameBase
             {
                 allIndices.Add(i);
             }
-            foreach (var subset in allIndices.PowerSets())
+            var subsets = SubsetExtensions.SubSets(allIndices, 2);
+            int beamSize = 2;
+            List<PartCombination> visited = new List<PartCombination>();
+            //string str = "";
+            // considering parent categories
+            foreach (Functionality.Category c in m._GRAPH._functionalityValues._parentCategories)
             {
-                if (subset.ToList().Count == m._PARTS.Count || subset.ToList().Count == 0)
+                if (c == Functionality.Category.None)
                 {
                     continue;
                 }
-                Model mc = m.Clone() as Model;
-                mc._GRAPH.deleteNodes(subset.ToList());
-                if (!mc._GRAPH.isValid())
+                int cid = (int)c;
+                if (res[cid, 1] >= 0.9)
                 {
                     continue;
                 }
-                mc._model_name += "_" + id.ToString();
-                mc.deleteParts(subset.ToList());
-                mc.unify();
-                mc.composeMesh();
-                this.saveAPartBasedModel(mc, mc._path + mc._model_name + ".pam", true);
-                scores = this.runFunctionalityTest(mc);
-                // considering parent categories
-                foreach (Functionality.Category c in m._GRAPH._functionalityValues._parentCategories)
+                // beam search
+                List<PartCombination> beam = new List<PartCombination>();
+                List<BigInteger> hash = new List<BigInteger>();
+                foreach (var subset in subsets)
                 {
-                    if (c == Functionality.Category.None)
+                    PartCombination startCombination = new PartCombination(subset.ToList());
+                    beam.Add(startCombination);
+                    hash.Add(startCombination._HASH);
+                    while (beam.Count > 0)
                     {
-                        continue;
+                        List<PartCombination> set = new List<PartCombination>();
+                        foreach (PartCombination combination in beam)
+                        {
+                            foreach (int j in allIndices.Except(combination._NODES).ToList())
+                            {
+                                PartCombination successorCombination = combination.Clone() as PartCombination;
+                                successorCombination.Add(j);
+                                if (hash.Contains(successorCombination._HASH))
+                                {
+                                    continue;
+                                }
+                                if (visited.Select(x => x._HASH).ToList().Contains(successorCombination._HASH))
+                                {
+                                    successorCombination = visited.Find(x => x._HASH == successorCombination._HASH);
+                                    scores = successorCombination._SCORES;
+                                }
+                                else
+                                {
+                                    Model mc = m.Clone() as Model;
+                                    mc._GRAPH.deleteNodes(allIndices.Except(successorCombination._NODES).ToList());
+                                    //str += id + "\n";
+                                    //foreach (Node node in mc._GRAPH._NODES)
+                                    //{
+                                    //    str += "node " + node._INDEX + ": " + node._pos.x + ", " + node._pos.y + ", " + node._pos.z + "\n"
+                                    //        + "ground touching: " + node._funcs.Contains(Functionality.Functions.GROUND_TOUCHING) + "\n"
+                                    //        + "boundary box: \n";
+                                    //    foreach (Vector3d vector in node._PART._BOUNDINGBOX._POINTS3D)
+                                    //    {
+                                    //        str += vector.x + ", " + vector.y + ", " + vector.z + "\n";
+                                    //    }
+                                    //}
+                                    //str += "\n";
+                                    if (!mc._GRAPH.isValid())
+                                    {
+                                        continue;
+                                    }
+                                    mc._model_name += "_" + id.ToString();
+                                    mc.deleteParts(allIndices.Except(successorCombination._NODES).ToList());
+                                    mc.unify();
+                                    mc.composeMesh();
+                                    this.saveAPartBasedModel(mc, mc._path + mc._model_name + ".pam", true);
+                                    scores = this.runFunctionalityTest(mc);
+                                    successorCombination._SCORES = scores;
+                                    visited.Add(successorCombination);
+                                    id++;
+                                }
+                                probs = this.getProbabilityForACat(cid, scores[cid]);
+                                set.Add(successorCombination);
+                                hash.Add(successorCombination._HASH);
+                                if (probs[0] > res[cid, 1])
+                                {
+                                    res[cid, 0] = scores[cid];
+                                    res[cid, 1] = probs[0];
+                                    res[cid, 2] = probs[1];
+                                    res[cid, 3] = probs[2];
+                                }
+                            }
+                        }
+                        beam.Clear();
+                        while (set.Count > 0 && beam.Count < beamSize)
+                        {
+                            set = set.OrderByDescending(x => x._SCORES[cid]).ToList();
+                            beam.Add(set[0]);
+                            set.RemoveAt(0);
+                        }
                     }
-                    int cid = (int)c;
-                    if (res[cid, 1] >= 0.9)
-                    {
-                        continue;
-                    }
-                    probs = this.getProbabilityForACat(cid, scores[cid]);
-                    if (probs[0] > res[cid, 1])
-                    {
-                        res[cid, 0] = scores[cid];
-                        res[cid, 1] = probs[0];
-                        res[cid, 2] = probs[1];
-                        res[cid, 3] = probs[2];
-                    }
-                }// per cat
-                id++;
-            }
+                }
+            }// per cat
+            //string save_path = m._path + "\\" + m._model_name + "_nodes.txt";
+            //System.IO.File.WriteAllText(save_path, str);
+            //foreach (var subset in allIndices.PowerSets())
+            //{
+            //    if (subset.ToList().Count == m._PARTS.Count || subset.ToList().Count == 0)
+            //    {
+            //        continue;
+            //    }
+            //    Model mc = m.Clone() as Model;
+            //    mc._GRAPH.deleteNodes(subset.ToList());
+            //    if (!mc._GRAPH.isValid())
+            //    {
+            //        continue;
+            //    }
+            //    mc._model_name += "_" + id.ToString();
+            //    mc.deleteParts(subset.ToList());
+            //    mc.unify();
+            //    mc.composeMesh();
+            //    this.saveAPartBasedModel(mc, mc._path + mc._model_name + ".pam", true);
+            //    scores = this.runFunctionalityTest(mc);
+            //    // considering parent categories
+            //    foreach (Functionality.Category c in m._GRAPH._functionalityValues._parentCategories)
+            //    {
+            //        if (c == Functionality.Category.None)
+            //        {
+            //            continue;
+            //        }
+            //        int cid = (int)c;
+            //        if (res[cid, 1] >= 0.9)
+            //        {
+            //            continue;
+            //        }
+            //        probs = this.getProbabilityForACat(cid, scores[cid]);
+            //        if (probs[0] > res[cid, 1])
+            //        {
+            //            res[cid, 0] = scores[cid];
+            //            res[cid, 1] = probs[0];
+            //            res[cid, 2] = probs[1];
+            //            res[cid, 3] = probs[2];
+            //        }
+            //    }// per cat
+            //    id++;
+            //}
             // considering parent categories
             //foreach (Functionality.Category c in m._GRAPH._functionalityValues._parentCategories)
             //{

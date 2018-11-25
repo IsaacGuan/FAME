@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Text;
+using System.Numerics;
 using System.Threading.Tasks;
 using System.Diagnostics;
 using Geometry;
@@ -2502,6 +2503,81 @@ namespace Component
             return fs;
         }
     }// FunctionalSpace
+
+    public class PartCombination
+    {
+        List<int> _nodes = new List<int>();
+        BigInteger _hash;
+        double[] _scores = new double[Functionality._NUM_CATEGORIY];
+
+        public PartCombination(List<int> nodes, BigInteger hash, double[] scores)
+        {
+            _nodes = nodes;
+            _hash = hash;
+            _scores = scores;
+        }
+
+        public PartCombination(List<int> nodes)
+        {
+            _nodes = new List<int>(nodes);
+            _hash = 0;
+            foreach (int i in _nodes)
+            {
+                _hash += BigInteger.Pow(2, i);
+            }
+            for (int i = 0; i < Functionality._NUM_CATEGORIY; ++i)
+            {
+                _scores[i] = 0;
+            }
+        }
+
+        public void Add(int node)
+        {
+            _nodes.Add(node);
+            _hash += BigInteger.Pow(2, node);
+        }
+
+        public Object Clone()
+        {
+            List<int> nodes = new List<int>();
+            foreach (int node in _nodes)
+            {
+                nodes.Add(node);
+            }
+            BigInteger hash = _hash;
+            double[] score = _scores.Clone() as double[];
+            PartCombination partCombination = new PartCombination(nodes, hash, score);
+            return partCombination;
+        }
+
+        public List<int> _NODES
+        {
+            get
+            {
+                return _nodes;
+            }
+        }
+
+        public BigInteger _HASH
+        {
+            get
+            {
+                return _hash;
+            }
+        }
+
+        public double[] _SCORES
+        {
+            get
+            {
+                return _scores;
+            }
+            set
+            {
+                _scores = value;
+            }
+        }
+    }// PartCombination
 
     public class PartGroup
     {
