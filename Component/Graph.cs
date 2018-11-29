@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 using Geometry;
+using MIConvexHull;
 
 namespace Component
 {
@@ -1558,6 +1559,16 @@ namespace Component
             return occupy > 0.5;
         }// ifFunctionalSpaceObstructed
 
+        private class GroundVertex : IVertex
+        {
+            public GroundVertex(double x, double y)
+            {
+                Position = new double[2] { x, y };
+            }
+
+            public double[] Position { get; set; }
+        }
+
         public bool isPhysicalValid()
         {
             // if the functional part is tilted
@@ -1613,8 +1624,17 @@ namespace Component
             {
                 allVetices.AddRange(new List<Vector3d>(node._PART._MESH.VertexVectorArray));
             }
+            allVetices.RemoveAll(x => Double.IsNaN(x.x));
+            allVetices.RemoveAll(x => Double.IsNaN(x.y));
+            allVetices.RemoveAll(x => Double.IsNaN(x.z));
             double ground = allVetices.Min(x => x.y);
             groundPnts = allVetices.Where(x => x.y < (ground + 0.01)).ToList();
+            GroundVertex[] groundVertices = new GroundVertex[groundPnts.Count];
+            for (int i = 0; i < groundVertices.Length; ++i)
+            {
+                groundVertices[i] = new GroundVertex(groundPnts[i].x, groundPnts[i].z);
+            }
+            var convexHull = MIConvexHull.ConvexHull.Create(groundVertices).Result.Points.ToList();
             foreach (Node node in _nodes)
             {
                 Vector3d v = node._PART._BOUNDINGBOX.CENTER;
@@ -1637,11 +1657,15 @@ namespace Component
                 maxCoord = Vector2d.Max(v2, maxCoord);
             }
             // in case some model only has 2 ground touching points
-            Vector2d[] groundPnts2d = new Vector2d[4];
-            groundPnts2d[0] = new Vector2d(minCoord.x, minCoord.y);
-            groundPnts2d[1] = new Vector2d(minCoord.x, maxCoord.y);
-            groundPnts2d[2] = new Vector2d(maxCoord.x, maxCoord.y);
-            groundPnts2d[3] = new Vector2d(maxCoord.x, minCoord.y);
+            Vector2d[] groundPnts2d = new Vector2d[convexHull.Count];
+            if (groundPnts2d.Length <= 2)
+            {
+                return false;
+            }
+            for (int i = 0; i < groundPnts2d.Length; ++i)
+            {
+                groundPnts2d[i] = new Vector2d(convexHull[i].Position[0], convexHull[i].Position[1]);
+            }
             if (!Polygon2D.isPointInPolygon(center, groundPnts2d))
             {
                 return false;
