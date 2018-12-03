@@ -8800,13 +8800,18 @@ namespace FameBase
             return res;
         }// seperatePartialMatching
 
+        int pcid = 0;
+        List<PartCombination> visitedCombinations = new List<PartCombination>();
+        string toPrint = "";
         private double[,] partialMatching(Model m, bool doPartialMatching)
         {
             double[,] res = new double[Functionality._NUM_CATEGORIY, 4]; // score + 3 prob
-            Graph g = m._GRAPH;
-            int nNodes = g._NNodes;
             //bool[] useNodes;
             List<int> allIndices = new List<int>();
+            for (int i = 0; i < m._GRAPH._NNodes; ++i)
+            {
+                allIndices.Add(i);
+            }
             //List<int> indices = new List<int>();
             //List<List<int>> excludedNodeIndices = new List<List<int>>();
             //excludedNodeIndices.Add(indices);
@@ -8831,15 +8836,9 @@ namespace FameBase
             {
                 return res;
             }
-            int id = 0;
-            for (int i = 0; i < nNodes; ++i)
-            {
-                allIndices.Add(i);
-            }
-            var subsets = SubsetExtensions.SubSets(allIndices, 2);
-            int beamSize = 2;
-            List<PartCombination> visited = new List<PartCombination>();
-            //string str = "";
+            //var subsets = SubsetExtensions.SubSets(allIndices, 2);
+            pcid = 0;
+            visitedCombinations = new List<PartCombination>() { };
             // considering parent categories
             foreach (Functionality.Category c in m._GRAPH._functionalityValues._parentCategories)
             {
@@ -8852,86 +8851,16 @@ namespace FameBase
                 {
                     continue;
                 }
-                // beam search
-                List<PartCombination> beam = new List<PartCombination>();
-                List<BigInteger> hash = new List<BigInteger>();
-                foreach (var subset in subsets)
-                {
-                    PartCombination startCombination = new PartCombination(subset.ToList());
-                    beam.Add(startCombination);
-                    hash.Add(startCombination._HASH);
-                    while (beam.Count > 0)
-                    {
-                        List<PartCombination> set = new List<PartCombination>();
-                        foreach (PartCombination combination in beam)
-                        {
-                            foreach (int j in allIndices.Except(combination._NODES).ToList())
-                            {
-                                PartCombination successorCombination = combination.Clone() as PartCombination;
-                                successorCombination.Add(j);
-                                if (hash.Contains(successorCombination._HASH))
-                                {
-                                    continue;
-                                }
-                                if (visited.Select(x => x._HASH).ToList().Contains(successorCombination._HASH))
-                                {
-                                    successorCombination = visited.Find(x => x._HASH == successorCombination._HASH);
-                                    scores = successorCombination._SCORES;
-                                }
-                                else
-                                {
-                                    Model mc = m.Clone() as Model;
-                                    mc._GRAPH.deleteNodes(allIndices.Except(successorCombination._NODES).ToList());
-                                    //str += id + "\n";
-                                    //foreach (Node node in mc._GRAPH._NODES)
-                                    //{
-                                    //    str += "node " + node._INDEX + ": " + node._pos.x + ", " + node._pos.y + ", " + node._pos.z + "\n"
-                                    //        + "ground touching: " + node._funcs.Contains(Functionality.Functions.GROUND_TOUCHING) + "\n"
-                                    //        + "boundary box: \n";
-                                    //    foreach (Vector3d vector in node._PART._BOUNDINGBOX._POINTS3D)
-                                    //    {
-                                    //        str += vector.x + ", " + vector.y + ", " + vector.z + "\n";
-                                    //    }
-                                    //}
-                                    //str += "\n";
-                                    if (!mc._GRAPH.isValid())
-                                    {
-                                        continue;
-                                    }
-                                    mc._model_name += "_" + id.ToString();
-                                    mc.deleteParts(allIndices.Except(successorCombination._NODES).ToList());
-                                    mc.unify();
-                                    mc.composeMesh();
-                                    this.saveAPartBasedModel(mc, mc._path + mc._model_name + ".pam", true);
-                                    scores = this.runFunctionalityTest(mc);
-                                    successorCombination._SCORES = scores;
-                                    visited.Add(successorCombination);
-                                    id++;
-                                }
-                                probs = this.getProbabilityForACat(cid, scores[cid]);
-                                set.Add(successorCombination);
-                                hash.Add(successorCombination._HASH);
-                                if (probs[0] > res[cid, 1])
-                                {
-                                    res[cid, 0] = scores[cid];
-                                    res[cid, 1] = probs[0];
-                                    res[cid, 2] = probs[1];
-                                    res[cid, 3] = probs[2];
-                                }
-                            }
-                        }
-                        beam.Clear();
-                        while (set.Count > 0 && beam.Count < beamSize)
-                        {
-                            set = set.OrderByDescending(x => x._SCORES[cid]).ToList();
-                            beam.Add(set[0]);
-                            set.RemoveAt(0);
-                        }
-                    }
-                }
+                //foreach (var subset in subsets)
+                //{
+                //    PartCombination startCombination = new PartCombination(subset.ToList());
+                //    res = beamSearch(2, startCombination, cid, m, res);
+                //}
+                PartCombination startCombination = new PartCombination(allIndices);
+                res = beamSearch(2, startCombination, cid, m, res);
             }// per cat
-            //string save_path = m._path + "\\" + m._model_name + "_nodes.txt";
-            //System.IO.File.WriteAllText(save_path, str);
+            string save_path = m._path + "\\" + m._model_name + "_probs[0].txt";
+            System.IO.File.WriteAllText(save_path, toPrint);
             //foreach (var subset in allIndices.PowerSets())
             //{
             //    if (subset.ToList().Count == m._PARTS.Count || subset.ToList().Count == 0)
@@ -9031,6 +8960,90 @@ namespace FameBase
             //}// per cat
             return res;
         }// partialMatching
+
+        private double[,] beamSearch(int beamSize, PartCombination startCombination, int cid, Model m, double[,] res)
+        {
+            double[] scores;
+            double[] probs;
+            List<int> allIndices = new List<int>();
+            for (int i = 0; i < m._GRAPH._NNodes; ++i)
+            {
+                allIndices.Add(i);
+            }
+            List<PartCombination> beam = new List<PartCombination>();
+            List<BigInteger> hash = new List<BigInteger>();
+            beam.Add(startCombination);
+            hash.Add(startCombination._HASH);
+            while (beam.Count > 0)
+            {
+                List<PartCombination> set = new List<PartCombination>();
+                foreach (PartCombination combination in beam)
+                {
+                    foreach (int j in combination._NODES)
+                    {
+                        PartCombination successorCombination = combination.Clone() as PartCombination;
+                        successorCombination.Remove(j);
+                        if (hash.Contains(successorCombination._HASH))
+                        {
+                            continue;
+                        }
+                        if (visitedCombinations.Select(x => x._HASH).ToList().Contains(successorCombination._HASH))
+                        {
+                            successorCombination = visitedCombinations.Find(x => x._HASH == successorCombination._HASH);
+                            scores = successorCombination._SCORES;
+                        }
+                        else
+                        {
+                            Model mc = m.Clone() as Model;
+                            mc._GRAPH.deleteNodes(allIndices.Except(successorCombination._NODES).ToList());
+                            if (!mc._GRAPH.isValid())
+                            {
+                                continue;
+                            }
+                            mc._model_name += "_" + pcid.ToString();
+                            mc.deleteParts(allIndices.Except(successorCombination._NODES).ToList());
+                            mc.unify();
+                            mc.composeMesh();
+                            this.saveAPartBasedModel(mc, mc._path + mc._model_name + ".pam", true);
+                            scores = this.runFunctionalityTest(mc);
+                            successorCombination._SCORES = scores;
+                            successorCombination._path = mc._path;
+                            successorCombination._model_name = mc._model_name;
+                            visitedCombinations.Add(successorCombination);
+                            pcid++;
+                        }
+                        probs = this.getProbabilityForACat(cid, scores[cid]);
+                        set.Add(successorCombination);
+                        hash.Add(successorCombination._HASH);
+                        toPrint += pcid + "\n" + Functionality.getCategoryName(cid) + ": "
+                                + res[cid, 0] + ", " + res[cid, 1] + ", " + res[cid, 2] + ", " + res[cid, 3] + "\n";
+                        toPrint += "\n";
+                        string scoreDir = successorCombination._path + "\\" + successorCombination._model_name + "\\" + successorCombination._model_name + "_score.txt";
+                        string str = Functionality.getCategoryName(cid) + " " + probs[2];
+                        System.IO.File.WriteAllText(scoreDir, str);
+                        if (probs[0] > res[cid, 1])
+                        {
+                            res[cid, 0] = scores[cid];
+                            res[cid, 1] = probs[0];
+                            res[cid, 2] = probs[1];
+                            res[cid, 3] = probs[2];
+                        }
+                        if (res[cid, 1] >= 0.9)
+                        {
+                            return res;
+                        }
+                    }
+                }
+                beam.Clear();
+                while (set.Count > 0 && beam.Count < beamSize)
+                {
+                    set = set.OrderByDescending(x => x._SCORES[cid]).ToList();
+                    beam.Add(set[0]);
+                    set.RemoveAt(0);
+                }
+            }
+            return res;
+        }// beamSearch
 
         double[] _currFuncScores = null;
         private double computeICONfeaturePerCategory(Model m, int catIdx, double[,] pointsFeatures, bool[] useNodes, out List<PartGroup> patches)

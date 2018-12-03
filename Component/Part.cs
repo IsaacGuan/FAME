@@ -2506,6 +2506,8 @@ namespace Component
 
     public class PartCombination
     {
+        public string _model_name = "";
+        public string _path = "";
         List<int> _nodes = new List<int>();
         BigInteger _hash;
         double[] _scores = new double[Functionality._NUM_CATEGORIY];
@@ -2535,6 +2537,12 @@ namespace Component
         {
             _nodes.Add(node);
             _hash += BigInteger.Pow(2, node);
+        }
+
+        public void Remove(int node)
+        {
+            _nodes.Remove(node);
+            _hash -= BigInteger.Pow(2, node);
         }
 
         public Object Clone()
