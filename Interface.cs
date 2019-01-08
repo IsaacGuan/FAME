@@ -1082,6 +1082,16 @@ namespace FameBase
             this.glViewer.editFunctions("sitting", this.sitting.Checked);
         }
 
+        private void leaning_CheckedChanged(object sender, EventArgs e)
+        {
+            this.glViewer.editFunctions("leaning", this.leaning.Checked);
+        }
+
+        private void holding_CheckedChanged(object sender, EventArgs e)
+        {
+            this.glViewer.editFunctions("holding", this.holding.Checked);
+        }
+
         private void placement_CheckedChanged(object sender, EventArgs e)
         {
             this.glViewer.editFunctions("placement", this.placement.Checked);
@@ -1108,6 +1118,14 @@ namespace FameBase
             if (this.sitting.Checked)
             {
                 res.Add("sitting");
+            }
+            if (this.leaning.Checked)
+            {
+                res.Add("leaning");
+            }
+            if (this.holding.Checked)
+            {
+                res.Add("holding");
             }
             if (this.placement.Checked)
             {
@@ -1146,6 +1164,8 @@ namespace FameBase
         public void clearCheckBoxes()
         {
             this.sitting.Checked = false;
+            this.leaning.Checked = false;
+            this.holding.Checked = false;
             this.placement.Checked = false;
             this.storage.Checked = false;
             this.rolling.Checked = false;
@@ -1158,6 +1178,12 @@ namespace FameBase
             {
                 case "sitting":
                     this.sitting.Checked = true;
+                    break;
+                case "leaning":
+                    this.leaning.Checked = true;
+                    break;
+                case "holding":
+                    this.holding.Checked = true;
                     break;
                 case "placement":
                     this.placement.Checked = true;

@@ -420,7 +420,10 @@ namespace Component
                 case "human_hip":
                     return Functions.SITTING;
                 case "backsupport":
+                case "leaning":
                     return Functions.HUMAN_BACK;
+                case "holding":
+                    return Functions.HAND_HOLD;
                 default:
                     return Functions.NONE;
             }
@@ -445,7 +448,9 @@ namespace Component
                 case Functions.SITTING:
                     return "sitting";
                 case Functions.HUMAN_BACK:
-                    return "backsupport";
+                    return "leaning";
+                case Functions.HAND_HOLD:
+                    return "holding";
                 default:
                     return "none";
             }

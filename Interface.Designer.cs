@@ -113,6 +113,8 @@
             this.storage = new System.Windows.Forms.CheckBox();
             this.placement = new System.Windows.Forms.CheckBox();
             this.sitting = new System.Windows.Forms.CheckBox();
+            this.leaning = new System.Windows.Forms.CheckBox();
+            this.holding = new System.Windows.Forms.CheckBox();
             this.outputTextWindow = new System.Windows.Forms.TextBox();
             this.category_panel = new System.Windows.Forms.Panel();
             this.category_cancel = new System.Windows.Forms.Button();
@@ -840,6 +842,8 @@
             this.functionGroup.Controls.Add(this.storage);
             this.functionGroup.Controls.Add(this.placement);
             this.functionGroup.Controls.Add(this.sitting);
+            this.functionGroup.Controls.Add(this.leaning);
+            this.functionGroup.Controls.Add(this.holding);
             this.functionGroup.Location = new System.Drawing.Point(4, 3);
             this.functionGroup.Name = "functionGroup";
             this.functionGroup.Size = new System.Drawing.Size(332, 74);
@@ -848,7 +852,7 @@
             // rocking
             // 
             this.rocking.AutoSize = true;
-            this.rocking.Location = new System.Drawing.Point(79, 26);
+            this.rocking.Location = new System.Drawing.Point(79, 20);
             this.rocking.Name = "rocking";
             this.rocking.Size = new System.Drawing.Size(61, 17);
             this.rocking.TabIndex = 7;
@@ -906,7 +910,7 @@
             // storage
             // 
             this.storage.AutoSize = true;
-            this.storage.Location = new System.Drawing.Point(3, 49);
+            this.storage.Location = new System.Drawing.Point(3, 36);
             this.storage.Name = "storage";
             this.storage.Size = new System.Drawing.Size(61, 17);
             this.storage.TabIndex = 2;
@@ -917,7 +921,7 @@
             // placement
             // 
             this.placement.AutoSize = true;
-            this.placement.Location = new System.Drawing.Point(3, 26);
+            this.placement.Location = new System.Drawing.Point(3, 20);
             this.placement.Name = "placement";
             this.placement.Size = new System.Drawing.Size(75, 17);
             this.placement.TabIndex = 1;
@@ -935,6 +939,28 @@
             this.sitting.Text = "sitting";
             this.sitting.UseVisualStyleBackColor = true;
             this.sitting.CheckedChanged += new System.EventHandler(this.sitting_CheckedChanged);
+            // 
+            // leaning
+            // 
+            this.leaning.AutoSize = true;
+            this.leaning.Location = new System.Drawing.Point(79, 36);
+            this.leaning.Name = "leaning";
+            this.leaning.Size = new System.Drawing.Size(53, 17);
+            this.leaning.TabIndex = 0;
+            this.leaning.Text = "leaning";
+            this.leaning.UseVisualStyleBackColor = true;
+            this.leaning.CheckedChanged += new System.EventHandler(this.leaning_CheckedChanged);
+            // 
+            // holding
+            // 
+            this.holding.AutoSize = true;
+            this.holding.Location = new System.Drawing.Point(3, 52);
+            this.holding.Name = "holding";
+            this.holding.Size = new System.Drawing.Size(53, 17);
+            this.holding.TabIndex = 0;
+            this.holding.Text = "holding";
+            this.holding.UseVisualStyleBackColor = true;
+            this.holding.CheckedChanged += new System.EventHandler(this.holding_CheckedChanged);
             // 
             // outputTextWindow
             // 
@@ -1575,6 +1601,8 @@
         private System.Windows.Forms.ToolStripMenuItem rollingToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem rockingToolStripMenuItem;
         private System.Windows.Forms.CheckBox rocking;
+        private System.Windows.Forms.CheckBox leaning;
+        private System.Windows.Forms.CheckBox holding;
         private System.Windows.Forms.ToolStripMenuItem compPGsimsToolStripMenuItem;
     }
 }
