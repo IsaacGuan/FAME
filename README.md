@@ -8,7 +8,7 @@ The pre-processed models are excluded from the `data` folder in this repository.
 
 ## MATLAB Code
 
-Please download the MATLAB code [here](https://drive.google.com/open?id=1QnnHsxcZiDPj8MMinUBvU6FkZCnsrZxN) of the category functionality models for functionality partial matching, and extract the `PartialMatching` folder to the same directory where this repository resides.
+Please download the MATLAB code [here](https://drive.google.com/open?id=1qRcVR8LFrEEQsM0SxB-iqenDLNVLh_ui) of the category functionality models for functionality partial matching, and extract the `PartialMatching` folder to the same directory where this repository resides.
 
 ## Running the Code
 
